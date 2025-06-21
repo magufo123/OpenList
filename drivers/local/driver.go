@@ -21,7 +21,7 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/sign"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/common"
-	"github.com/alist-org/times"
+	"github.com/OpenListTeam-org/times"
 	cp "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
 	_ "golang.org/x/image/webp"

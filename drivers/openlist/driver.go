@@ -355,7 +355,7 @@ func (d *OpenList) ArchiveDecompress(ctx context.Context, srcObj, dstDir model.O
 	return err
 }
 
-//func (d *AList) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
+//func (d *OpenList) Other(ctx context.Context, args model.OtherArgs) (interface{}, error) {
 //	return nil, errs.NotSupport
 //}
 

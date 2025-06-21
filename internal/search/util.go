@@ -41,7 +41,7 @@ func WriteProgress(progress *model.IndexProgress) {
 func updateIgnorePaths(customIgnorePaths string) {
 	storages := op.GetAllStorages()
 	ignorePaths := make([]string, 0)
-	var skipDrivers = []string{"AList V2", "OpenList", "Virtual"}
+	var skipDrivers = []string{ "OpenList", "Virtual"}
 	v3Visited := make(map[string]bool)
 	for _, storage := range storages {
 		if utils.SliceContains(skipDrivers, storage.Config().Name) {
@@ -87,7 +87,7 @@ func init() {
 		return nil
 	})
 	op.RegisterStorageHook(func(typ string, storage driver.Driver) {
-		var skipDrivers = []string{"AList V2", "OpenList", "Virtual"}
+		var skipDrivers = []string{ "OpenList", "Virtual"}
 		if utils.SliceContains(skipDrivers, storage.Config().Name) {
 			updateIgnorePaths(setting.GetStr(conf.IgnorePaths))
 		}
