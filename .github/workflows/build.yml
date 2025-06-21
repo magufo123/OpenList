@@ -42,7 +42,7 @@ jobs:
       - name: Setup web
         run: bash build.sh dev web
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Build
         uses: OpenListTeam/cgo-actions@v1.1.2

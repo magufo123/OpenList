@@ -65,7 +65,7 @@ func UpdateIndex() {
 	mainColor := setting.GetStr(conf.MainColor)
 	conf.ManageHtml = conf.RawIndexHtml
 	replaceMap1 := map[string]string{
-		"https://cdn.oplist.org/gh/OpenListTeam/Logo@main/logo.svg": favicon,
+		"https://live2d.long2024.cn/yunp/applogo.png": favicon,
 		"Loading...":            title,
 		"main_color: undefined": fmt.Sprintf("main_color: '%s'", mainColor),
 	}

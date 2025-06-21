@@ -45,19 +45,19 @@ jobs:
         if: steps.cache-musl.outputs.cache-hit != 'true'
         run: bash build.sh prepare docker-multiplatform
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Build go binary (beta)
         if: env.IMAGE_IS_PROD != 'true'
         run: bash build.sh beta docker-multiplatform
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Build go binary (release)
         if: env.IMAGE_IS_PROD == 'true'
         run: bash build.sh release docker-multiplatform
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -111,7 +111,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Login to DockerHub Container Registry
         if: env.IMAGE_PUSH == 'true'

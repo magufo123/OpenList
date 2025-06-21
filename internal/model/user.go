@@ -177,5 +177,5 @@ func (u *User) WebAuthnCredentials() []webauthn.Credential {
 }
 
 func (u *User) WebAuthnIcon() string {
-	return "https://cdn.oplist.org/gh/OpenListTeam/Logo@main/logo.svg"
+	return "https://live2d.long2024.cn/yunp/applogo.png"
 }

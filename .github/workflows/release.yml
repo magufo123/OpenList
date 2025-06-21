@@ -58,7 +58,7 @@ jobs:
         run: |
           bash build.sh release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Upload assets
         uses: softprops/action-gh-release@v2

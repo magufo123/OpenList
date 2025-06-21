@@ -21,7 +21,7 @@ else
   git tag -d beta || true
   # Always true if there's no tag
   version=$(git describe --abbrev=0 --tags 2>/dev/null || echo "v0.0.0")
-  webVersion=$(curl -fsSL --max-time 2 $githubAuthHeader $githubAuthValue "https://api.github.com/repos/OpenListTeam/OpenList-Frontend/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
+  webVersion=$(curl -fsSL --max-time 2 $githubAuthHeader $githubAuthValue "https://api.github.com/repos/lyy2005a3/OpenList-Frontend/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
 fi
 
 echo "backend version: $version"
@@ -37,12 +37,12 @@ ldflags="\
 "
 
 FetchWebDev() {
-  pre_release_tag=$(curl -fsSL --max-time 2 $githubAuthHeader $githubAuthValue https://api.github.com/repos/OpenListTeam/OpenList-Frontend/releases | jq -r 'map(select(.prerelease)) | first | .tag_name')
+  pre_release_tag=$(curl -fsSL --max-time 2 $githubAuthHeader $githubAuthValue https://api.github.com/repos/lyy2005a3/OpenList-Frontend/releases | jq -r 'map(select(.prerelease)) | first | .tag_name')
   if [ -z "$pre_release_tag" ] || [ "$pre_release_tag" == "null" ]; then
     # fall back to latest release
-    pre_release_json=$(curl -fsSL --max-time 2 $githubAuthHeader $githubAuthValue -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/OpenListTeam/OpenList-Frontend/releases/latest")
+    pre_release_json=$(curl -fsSL --max-time 2 $githubAuthHeader $githubAuthValue -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/lyy2005a3/OpenList-Frontend/releases/latest")
   else
-    pre_release_json=$(curl -fsSL --max-time 2 $githubAuthHeader $githubAuthValue -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/OpenListTeam/OpenList-Frontend/releases/tags/$pre_release_tag")
+    pre_release_json=$(curl -fsSL --max-time 2 $githubAuthHeader $githubAuthValue -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/lyy2005a3/OpenList-Frontend/releases/tags/$pre_release_tag")
   fi
   pre_release_assets=$(echo "$pre_release_json" | jq -r '.assets[].browser_download_url')
   pre_release_tar_url=$(echo "$pre_release_assets" | grep "openlist-frontend-dist" | grep "\.tar\.gz$")
@@ -53,7 +53,7 @@ FetchWebDev() {
 }
 
 FetchWebRelease() {
-  release_json=$(curl -fsSL --max-time 2 $githubAuthHeader $githubAuthValue -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/OpenListTeam/OpenList-Frontend/releases/latest")
+  release_json=$(curl -fsSL --max-time 2 $githubAuthHeader $githubAuthValue -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/lyy2005a3/OpenList-Frontend/releases/latest")
   release_assets=$(echo "$release_json" | jq -r '.assets[].browser_download_url')
   release_tar_url=$(echo "$release_assets" | grep "openlist-frontend-dist" | grep "\.tar\.gz$")
   curl -fsSL "$release_tar_url" -o dist.tar.gz
