@@ -97,7 +97,7 @@ func InitialSettings() []model.SettingItem {
 		//{Key: conf.ApiUrl, Value: "", Type: conf.TypeString, Group: model.SITE},
 		//{Key: conf.BasePath, Value: "", Type: conf.TypeString, Group: model.SITE},
 		{Key: conf.SiteTitle, Value: "龙氏云盘", Type: conf.TypeString, Group: model.SITE},
-		{Key: conf.Announcement, Value: "### 欢迎访问龙氏云盘魔改版！！\nhttps://github.com/long2005a1/Long-Cloud", Type: conf.TypeText, Group: model.SITE},
+		{Key: conf.Announcement, Value: "### 欢迎访问龙氏云盘魔改版！！\nhttps://github.com/lyy2005a3/Long-Cloud", Type: conf.TypeText, Group: model.SITE},
 		{Key: "pagination_type", Value: "all", Type: conf.TypeSelect, Options: "all,pagination,load_more,auto_load_more", Group: model.SITE},
 		{Key: "default_page_size", Value: "30", Type: conf.TypeNumber, Group: model.SITE},
 		{Key: conf.AllowIndexed, Value: "false", Type: conf.TypeBool, Group: model.SITE},
@@ -143,7 +143,7 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.VideoAutoplay, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
 		{Key: conf.PreviewArchivesByDefault, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
 		{Key: conf.ReadMeAutoRender, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
-		{Key: conf.FilterReadMeScripts, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
+ 		{Key: conf.FilterReadMeScripts, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
 		// global settings
 		{Key: conf.HideFiles, Value: "/\\/README.md/i", Type: conf.TypeText, Group: model.GLOBAL},
 		{Key: "package_download", Value: "true", Type: conf.TypeBool, Group: model.GLOBAL},
@@ -200,7 +200,7 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.S3AccessKeyId, Value: "", Type: conf.TypeString, Group: model.S3, Flag: model.PRIVATE},
 		{Key: conf.S3SecretAccessKey, Value: "", Type: conf.TypeString, Group: model.S3, Flag: model.PRIVATE},
 		{Key: conf.S3Buckets, Value: "[]", Type: conf.TypeString, Group: model.S3, Flag: model.PRIVATE},
-
+		
 		// ftp settings
 		{Key: conf.FTPPublicHost, Value: "127.0.0.1", Type: conf.TypeString, Group: model.FTP, Flag: model.PRIVATE},
 		{Key: conf.FTPPasvPortMap, Value: "", Type: conf.TypeText, Group: model.FTP, Flag: model.PRIVATE},
@@ -210,7 +210,7 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.FTPImplicitTLS, Value: "false", Type: conf.TypeBool, Group: model.FTP, Flag: model.PRIVATE},
 		{Key: conf.FTPTLSPrivateKeyPath, Value: "", Type: conf.TypeString, Group: model.FTP, Flag: model.PRIVATE},
 		{Key: conf.FTPTLSPublicCertPath, Value: "", Type: conf.TypeString, Group: model.FTP, Flag: model.PRIVATE},
-
+		
 		// traffic settings
 		{Key: conf.TaskOfflineDownloadThreadsNum, Value: strconv.Itoa(conf.Conf.Tasks.Download.Workers), Type: conf.TypeNumber, Group: model.TRAFFIC, Flag: model.PRIVATE},
 		{Key: conf.TaskOfflineDownloadTransferThreadsNum, Value: strconv.Itoa(conf.Conf.Tasks.Transfer.Workers), Type: conf.TypeNumber, Group: model.TRAFFIC, Flag: model.PRIVATE},
