@@ -504,7 +504,6 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 		retry.Attempts(3),
 		retry.Delay(time.Second),
 		retry.DelayType(retry.BackOffDelay))
-	threadG.SetLimit(3)
 
 	count := int(size / sliceSize)
 	lastPartSize := size % sliceSize

@@ -82,7 +82,6 @@ func (d *Open123) Upload(ctx context.Context, file model.FileStreamer, createRes
 		retry.Attempts(3),
 		retry.Delay(time.Second),
 		retry.DelayType(retry.BackOffDelay))
-	threadG.SetLimit(3)
 
 	for partIndex := int64(0); partIndex < uploadNums; partIndex++ {
 		if utils.IsCanceled(uploadCtx) {

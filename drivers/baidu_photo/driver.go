@@ -342,7 +342,6 @@ func (d *BaiduPhoto) Put(ctx context.Context, dstDir model.Obj, stream model.Fil
 			retry.Attempts(3),
 			retry.Delay(time.Second),
 			retry.DelayType(retry.BackOffDelay))
-		threadG.SetLimit(3)
 
 		for i, partseq := range precreateResp.BlockList {
 			if utils.IsCanceled(upCtx) {

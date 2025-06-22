@@ -298,7 +298,6 @@ func (d *MoPan) Put(ctx context.Context, dstDir model.Obj, stream model.FileStre
 			retry.Attempts(3),
 			retry.Delay(time.Second),
 			retry.DelayType(retry.BackOffDelay))
-		threadG.SetLimit(3)
 
 		// step.3
 		parts, err := d.client.GetAllMultiUploadUrls(initUpdload.UploadFileID, initUpdload.PartInfos)
