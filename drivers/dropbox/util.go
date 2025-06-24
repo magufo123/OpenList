@@ -28,7 +28,7 @@ func (d *Dropbox) refreshToken() error {
 			SetQueryParams(map[string]string{
 				"refresh_ui": d.RefreshToken,
 				"server_use": "true",
-				"driver_txt": "baiduyun_go",
+				"driver_txt": "dropboxs_go",
 			}).
 			Get(u)
 		if err != nil {
@@ -46,9 +46,6 @@ func (d *Dropbox) refreshToken() error {
 		return nil
 	}
 	url := d.base + "/oauth2/token"
-	if utils.SliceContains([]string{"", DefaultClientID}, d.ClientID) {
-		url = d.APIAddress
-	}
 	var tokenResp TokenResp
 	resp, err := base.RestyClient.R().
 		//ForceContentType("application/x-www-form-urlencoded").

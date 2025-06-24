@@ -5,10 +5,6 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/op"
 )
 
-const (
-	DefaultClientID = "76lrwrklhdn1icb"
-)
-
 type Addition struct {
 	driver.RootPath
 	UseOnlineAPI    bool   `json:"use_online_api" default:"true"`
