@@ -2,4 +2,7 @@ blank_issues_enabled: true
 contact_links:
   - name: Questions & Discussions
     url: https://github.com/OpenListTeam/OpenList/discussions
-    about: Use GitHub discussions for message-board style questions and discussions.
+    about: Discuss / 讨论、问题、想法等
+  - name: Chat
+    url: https://t.me/OpenListTeam
+    about: Chat with us / 与我们聊天

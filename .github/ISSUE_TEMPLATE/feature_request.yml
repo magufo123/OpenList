@@ -1,5 +1,6 @@
 name: "Feature request"
-description: Feature request
+description: Feature request / 功能请求 / 增强
+title: "[Feature] "
 labels: [enhancement]
 body:
   - type: checkboxes
@@ -7,7 +8,7 @@ body:
       label: Please make sure of the following things
       description: You may select more than one, even select all.
       options:
-        - label: I have read the [documentation](https://openlistteam.github.io/docs).
+        - label: I have read the [documentation](https://docs.openlist.org).
         - label: I'm sure there are no duplicate issues or discussions.
         - label: I'm sure this feature is not implemented.
         - label: I'm sure it's a reasonable and popular requirement.
