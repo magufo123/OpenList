@@ -3,6 +3,7 @@ package _123_open
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/OpenListTeam/OpenList/drivers/base"
@@ -21,7 +22,7 @@ func (d *Open123) create(parentFileID int64, filename string, etag string, size 
 		req.SetBody(base.Json{
 			"parentFileId": parentFileID,
 			"filename":     filename,
-			"etag":         etag,
+			"etag":         strings.ToLower(etag),
 			"size":         size,
 			"duplicate":    duplicate,
 			"containDir":   containDir,

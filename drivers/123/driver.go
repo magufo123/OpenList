@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -195,7 +196,7 @@ func (d *Pan123) Put(ctx context.Context, dstDir model.Obj, file model.FileStrea
 	data := base.Json{
 		"driveId":      0,
 		"duplicate":    2, // 2->覆盖 1->重命名 0->默认
-		"etag":         etag,
+		"etag":         strings.ToLower(etag),
 		"fileName":     file.GetName(),
 		"parentFileId": dstDir.GetID(),
 		"size":         file.GetSize(),
