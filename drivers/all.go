@@ -52,7 +52,6 @@ import (
 	_ "github.com/OpenListTeam/OpenList/drivers/pikpak_share"
 	_ "github.com/OpenListTeam/OpenList/drivers/quark_uc"
 	_ "github.com/OpenListTeam/OpenList/drivers/quark_uc_tv"
-	_ "github.com/OpenListTeam/OpenList/drivers/quqi"
 	_ "github.com/OpenListTeam/OpenList/drivers/s3"
 	_ "github.com/OpenListTeam/OpenList/drivers/seafile"
 	_ "github.com/OpenListTeam/OpenList/drivers/sftp"
