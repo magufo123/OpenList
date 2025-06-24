@@ -175,8 +175,7 @@ func (d *CloudreveV4) doLogin(needCaptcha bool) error {
 }
 
 func (d *CloudreveV4) refreshToken() error {
-	var token Token
-	if token.RefreshToken == "" {
+	if d.RefreshToken == "" {
 		if d.Username != "" {
 			err := d.login()
 			if err != nil {
@@ -185,6 +184,7 @@ func (d *CloudreveV4) refreshToken() error {
 		}
 		return nil
 	}
+	var token Token
 	err := d.request(http.MethodPost, "/session/token/refresh", func(req *resty.Request) {
 		req.SetBody(base.Json{
 			"refresh_token": d.RefreshToken,
