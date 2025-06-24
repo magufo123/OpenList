@@ -15,9 +15,39 @@ import (
 )
 
 func (d *Dropbox) refreshToken() error {
+	// 使用在线API刷新Token，无需ClientID和ClientSecret
+	if d.UseOnlineAPI && len(d.APIAddress) > 0 {
+		u := d.APIAddress
+		var resp struct {
+			RefreshToken string `json:"refresh_token"`
+			AccessToken  string `json:"access_token"`
+			ErrorMessage string `json:"text"`
+		}
+		_, err := base.RestyClient.R().
+			SetResult(&resp).
+			SetQueryParams(map[string]string{
+				"refresh_ui": d.RefreshToken,
+				"server_use": "true",
+				"driver_txt": "baiduyun_go",
+			}).
+			Get(u)
+		if err != nil {
+			return err
+		}
+		if resp.RefreshToken == "" || resp.AccessToken == "" {
+			if resp.ErrorMessage != "" {
+				return fmt.Errorf("failed to refresh token: %s", resp.ErrorMessage)
+			}
+			return fmt.Errorf("empty token returned from official API")
+		}
+		d.AccessToken = resp.AccessToken
+		d.RefreshToken = resp.RefreshToken
+		op.MustSaveDriverStorage(d)
+		return nil
+	}
 	url := d.base + "/oauth2/token"
 	if utils.SliceContains([]string{"", DefaultClientID}, d.ClientID) {
-		url = d.OauthTokenURL
+		url = d.APIAddress
 	}
 	var tokenResp TokenResp
 	resp, err := base.RestyClient.R().
