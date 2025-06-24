@@ -469,7 +469,7 @@ func (d *CloudreveV4) upS3(ctx context.Context, file model.FileStreamer, u FileU
 	}
 
 	// 上传成功发送回调请求
-	return d.request(http.MethodPost, "/callback/s3/"+u.SessionID+"/"+u.CallbackSecret, func(req *resty.Request) {
+	return d.request(http.MethodGet, "/callback/s3/"+u.SessionID+"/"+u.CallbackSecret, func(req *resty.Request) {
 		req.SetBody("{}")
 	}, nil)
 }
