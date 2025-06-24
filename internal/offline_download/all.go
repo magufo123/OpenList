@@ -7,5 +7,6 @@ import (
 	_ "github.com/OpenListTeam/OpenList/internal/offline_download/pikpak"
 	_ "github.com/OpenListTeam/OpenList/internal/offline_download/qbit"
 	_ "github.com/OpenListTeam/OpenList/internal/offline_download/thunder"
+	_ "github.com/OpenListTeam/OpenList/internal/offline_download/thunder_browser"
 	_ "github.com/OpenListTeam/OpenList/internal/offline_download/transmission"
 )

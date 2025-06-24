@@ -58,7 +58,7 @@ func (x *Thunder) Init(ctx context.Context) (err error) {
 				},
 				DeviceID: func() string {
 					if len(x.DeviceID) != 32 {
-						return utils.GetMD5EncodeStr(x.DeviceID)
+						return utils.GetMD5EncodeStr(x.Username + x.Password)
 					}
 					return x.DeviceID
 				}(),

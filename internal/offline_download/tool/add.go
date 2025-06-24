@@ -2,6 +2,7 @@ package tool
 
 import (
 	"context"
+
 	"net/url"
 	stdpath "path"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	_115 "github.com/OpenListTeam/OpenList/drivers/115"
 	"github.com/OpenListTeam/OpenList/drivers/pikpak"
 	"github.com/OpenListTeam/OpenList/drivers/thunder"
+	"github.com/OpenListTeam/OpenList/drivers/thunder_browser"
 	"github.com/OpenListTeam/OpenList/internal/conf"
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/fs"
@@ -102,6 +104,13 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 			tempDir = args.DstDirPath
 		} else {
 			tempDir = filepath.Join(setting.GetStr(conf.ThunderTempDir), uid)
+		}
+	case "ThunderBrowser":
+		switch storage.(type) {
+		case *thunder_browser.ThunderBrowser, *thunder_browser.ThunderBrowserExpert:
+			tempDir = args.DstDirPath
+		default:
+			tempDir = filepath.Join(setting.GetStr(conf.ThunderBrowserTempDir), uid)
 		}
 	}
 
