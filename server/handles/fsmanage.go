@@ -70,7 +70,7 @@ func FsMove(c *gin.Context) {
 		return
 	}
 	if len(req.Names) == 0 {
-		common.ErrorStrResp(c, "空文件名", 400)
+		common.ErrorStrResp(c, "Empty file names", 400)
 		return
 	}
 	user := c.MustGet("user").(*model.User)
@@ -88,22 +88,32 @@ func FsMove(c *gin.Context) {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-	if !req.Overwrite {
-		for _, name := range req.Names {
-			if res, _ := fs.Get(c, stdpath.Join(dstDir, name), &fs.GetArgs{NoLog: true}); res != nil {
-				common.ErrorStrResp(c, fmt.Sprintf("file [%s] exists", name), 403)
-				return
-			}
-		}
-	}
+	
+	// Create all tasks immediately without any synchronous validation
+	// All validation will be done asynchronously in the background
+	var addedTasks []task.TaskExtensionInfo
 	for i, name := range req.Names {
-		err := fs.Move(c, stdpath.Join(srcDir, name), dstDir, len(req.Names) > i+1)
+		t, err := fs.MoveWithTaskAndValidation(c, stdpath.Join(srcDir, name), dstDir, !req.Overwrite, len(req.Names) > i+1)
+		if t != nil {
+			addedTasks = append(addedTasks, t)
+		}
 		if err != nil {
 			common.ErrorResp(c, err, 500)
 			return
 		}
 	}
-	common.SuccessResp(c)
+	
+	// Return immediately with task information
+	if len(addedTasks) > 0 {
+		common.SuccessResp(c, gin.H{
+			"message": fmt.Sprintf("Successfully created %d move task(s)", len(addedTasks)),
+			"tasks": getTaskInfos(addedTasks),
+		})
+	} else {
+		common.SuccessResp(c, gin.H{
+			"message": "Move operations completed immediately",
+		})
+	}
 }
 
 func FsCopy(c *gin.Context) {
@@ -113,7 +123,7 @@ func FsCopy(c *gin.Context) {
 		return
 	}
 	if len(req.Names) == 0 {
-		common.ErrorStrResp(c, "空文件名", 400)
+		common.ErrorStrResp(c, "Empty file names", 400)
 		return
 	}
 	user := c.MustGet("user").(*model.User)
@@ -131,14 +141,9 @@ func FsCopy(c *gin.Context) {
 		common.ErrorResp(c, err, 403)
 		return
 	}
-	if !req.Overwrite {
-		for _, name := range req.Names {
-			if res, _ := fs.Get(c, stdpath.Join(dstDir, name), &fs.GetArgs{NoLog: true}); res != nil {
-				common.ErrorStrResp(c, fmt.Sprintf("文件 [%s] 已存在", name), 403)
-				return
-			}
-		}
-	}
+	
+	// Create all tasks immediately without any synchronous validation
+	// All validation will be done asynchronously in the background
 	var addedTasks []task.TaskExtensionInfo
 	for i, name := range req.Names {
 		t, err := fs.Copy(c, stdpath.Join(srcDir, name), dstDir, len(req.Names) > i+1)
@@ -150,9 +155,18 @@ func FsCopy(c *gin.Context) {
 			return
 		}
 	}
-	common.SuccessResp(c, gin.H{
-		"tasks": getTaskInfos(addedTasks),
-	})
+	
+	// Return immediately with task information
+	if len(addedTasks) > 0 {
+		common.SuccessResp(c, gin.H{
+			"message": fmt.Sprintf("Successfully created %d copy task(s)", len(addedTasks)),
+			"tasks": getTaskInfos(addedTasks),
+		})
+	} else {
+		common.SuccessResp(c, gin.H{
+			"message": "Copy operations completed immediately",
+		})
+	}
 }
 
 type RenameReq struct {
@@ -181,7 +195,7 @@ func FsRename(c *gin.Context) {
 		dstPath := stdpath.Join(stdpath.Dir(reqPath), req.Name)
 		if dstPath != reqPath {
 			if res, _ := fs.Get(c, dstPath, &fs.GetArgs{NoLog: true}); res != nil {
-				common.ErrorStrResp(c, fmt.Sprintf("文件 [%s] 已存在", req.Name), 403)
+				common.ErrorStrResp(c, fmt.Sprintf("file [%s] exists", req.Name), 403)
 				return
 			}
 		}
@@ -205,7 +219,7 @@ func FsRemove(c *gin.Context) {
 		return
 	}
 	if len(req.Names) == 0 {
-		common.ErrorStrResp(c, "空文件名", 400)
+		common.ErrorStrResp(c, "Empty file names", 400)
 		return
 	}
 	user := c.MustGet("user").(*model.User)
@@ -362,7 +376,7 @@ func Link(c *gin.Context) {
 		defer func(ReadSeekCloser io.ReadCloser) {
 			err := ReadSeekCloser.Close()
 			if err != nil {
-				log.Errorf("关闭链接数据错误: %v", err)
+				log.Errorf("close link data error: %v", err)
 			}
 		}(link.MFile)
 	}
