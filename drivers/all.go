@@ -18,7 +18,6 @@ import (
 	_ "github.com/OpenListTeam/OpenList/drivers/azure_blob"
 	_ "github.com/OpenListTeam/OpenList/drivers/baidu_netdisk"
 	_ "github.com/OpenListTeam/OpenList/drivers/baidu_photo"
-	_ "github.com/OpenListTeam/OpenList/drivers/baidu_share"
 	_ "github.com/OpenListTeam/OpenList/drivers/chaoxing"
 	_ "github.com/OpenListTeam/OpenList/drivers/cloudreve"
 	_ "github.com/OpenListTeam/OpenList/drivers/cloudreve_v4"
