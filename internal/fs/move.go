@@ -59,7 +59,7 @@ func (t *MoveTask) GetStatus() string {
 	return t.Status
 }
 
-func (t *MoveTask) GetProgress() float64 {添加评论More actions
+func (t *MoveTask) GetProgress() float64 {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 	
