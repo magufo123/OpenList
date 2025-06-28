@@ -26,7 +26,7 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/dlclark/regexp2 v1.11.4
 	github.com/dustinxie/ecc v0.0.0-20210511000915-959544187564
-	github.com/fclairamb/ftpserverlib v0.26.1-0.20250611192536-99cb646d0bbe
+	github.com/fclairamb/ftpserverlib 7accbe1c7aad
 	github.com/foxxorcat/mopan-sdk-go v0.1.6
 	github.com/foxxorcat/weiyun-sdk-go v0.1.3
 	github.com/gin-contrib/cors v1.7.2
