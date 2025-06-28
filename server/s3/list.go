@@ -5,7 +5,7 @@ package s3
 import (
 	"path"
 	"strings"
-	"time'"
+	"time"
 
 	"github.com/itsHenry35/gofakes3"
 	log "github.com/sirupsen/logrus"
