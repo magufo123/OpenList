@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"crypto/sha256"
-	"crypto/base64"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
