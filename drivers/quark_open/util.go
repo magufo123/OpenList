@@ -64,7 +64,7 @@ func (d *QuarkOpen) request(ctx context.Context, pathname string, method string,
 		return nil, err
 	}
 	// 判断 是否需要 刷新 access_token
-	if e.Status == -1 && (e.Errno == 11001 || e.Errno == 14001) {
+	if e.Status == -1 && (e.Errno == 11001 || (e.Errno == 14001 && strings.Contains(e.ErrorInfo, "access_token"))) {
 		// token 过期
 		err = d.refreshToken()
 		if err != nil {
