@@ -39,7 +39,7 @@ func (d *Dropbox) refreshToken() error {
 			if resp.ErrorMessage != "" {
 				return fmt.Errorf("failed to refresh token: %s", resp.ErrorMessage)
 			}
-			return fmt.Errorf("empty token returned from official API")
+			return fmt.Errorf("empty token returned from official API, a wrong refresh token may have been used")
 		}
 		d.AccessToken = resp.AccessToken
 		d.RefreshToken = resp.RefreshToken

@@ -458,7 +458,7 @@ func (d *QuarkOpen) _refreshToken() (string, string, error) {
 			if resp.ErrorMessage != "" {
 				return "", "", fmt.Errorf("failed to refresh token: %s", resp.ErrorMessage)
 			}
-			return "", "", fmt.Errorf("empty token returned from official API")
+			return "", "", fmt.Errorf("empty token returned from official API, a wrong refresh token may have been used")
 		}
 		return resp.RefreshToken, resp.AccessToken, nil
 	}
