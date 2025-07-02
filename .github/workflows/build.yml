@@ -2,9 +2,9 @@ name: Test Build
 
 on:
   push:
-    branches: [ 'main' ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ 'main' ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 concurrency:
@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest]
-        target: 
+        target:
           - darwin-amd64
           - darwin-arm64
           - windows-amd64
@@ -27,7 +27,6 @@ jobs:
     name: Build
     runs-on: ${{ matrix.platform }}
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -37,7 +36,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: "1.22"
 
       - name: Setup web
         run: bash build.sh dev web
@@ -51,11 +50,11 @@ jobs:
           musl-target-format: $os-$musl-$arch
           out-dir: build
           x-flags: |
-            github.com/OpenListTeam/OpenList/internal/conf.BuiltAt=$built_at
-            github.com/OpenListTeam/OpenList/internal/conf.GitAuthor=OpenList
-            github.com/OpenListTeam/OpenList/internal/conf.GitCommit=$git_commit
-            github.com/OpenListTeam/OpenList/internal/conf.Version=$tag
-            github.com/OpenListTeam/OpenList/internal/conf.WebVersion=dev
+            github.com/OpenListTeam/OpenList/internal/v4/conf.BuiltAt=$built_at
+            github.com/OpenListTeam/OpenList/internal/v4/conf.GitAuthor=OpenList
+            github.com/OpenListTeam/OpenList/internal/v4/conf.GitCommit=$git_commit
+            github.com/OpenListTeam/OpenList/internal/v4/conf.Version=$tag
+            github.com/OpenListTeam/OpenList/internal/v4/conf.WebVersion=dev
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

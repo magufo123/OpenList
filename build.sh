@@ -38,11 +38,11 @@ fi
 
 ldflags="\
 -w -s \
--X 'github.com/OpenListTeam/OpenList/internal/conf.BuiltAt=$builtAt' \
--X 'github.com/OpenListTeam/OpenList/internal/conf.GitAuthor=$gitAuthor' \
--X 'github.com/OpenListTeam/OpenList/internal/conf.GitCommit=$gitCommit' \
--X 'github.com/OpenListTeam/OpenList/internal/conf.Version=$version' \
--X 'github.com/OpenListTeam/OpenList/internal/conf.WebVersion=$webVersion' \
+-X 'github.com/OpenListTeam/OpenList/internal/v4/conf.BuiltAt=$builtAt' \
+-X 'github.com/OpenListTeam/OpenList/internal/v4/conf.GitAuthor=$gitAuthor' \
+-X 'github.com/OpenListTeam/OpenList/internal/v4/conf.GitCommit=$gitCommit' \
+-X 'github.com/OpenListTeam/OpenList/internal/v4/conf.Version=$version' \
+-X 'github.com/OpenListTeam/OpenList/internal/v4/conf.WebVersion=$webVersion' \' \
 "
 
 FetchWebDev() {
