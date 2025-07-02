@@ -222,7 +222,7 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 	}
 	sha1 := file.GetHash().GetHash(utils.SHA1)
 	if len(sha1) != utils.SHA1.Width {
-		_, sha1, err = stream.CacheFullInTempFileAndHash(file, utils.SHA256)
+		_, sha1, err = stream.CacheFullInTempFileAndHash(file, utils.SHA1)
 		if err != nil {
 			return err
 		}

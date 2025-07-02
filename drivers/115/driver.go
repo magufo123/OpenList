@@ -186,7 +186,7 @@ func (d *Pan115) Put(ctx context.Context, dstDir model.Obj, stream model.FileStr
 	preHash = strings.ToUpper(preHash)
 	fullHash := stream.GetHash().GetHash(utils.SHA1)
 	if len(fullHash) != utils.SHA1.Width {
-		_, fullHash, err = streamPkg.CacheFullInTempFileAndHash(stream, utils.SHA256)
+		_, fullHash, err = streamPkg.CacheFullInTempFileAndHash(stream, utils.SHA1)
 		if err != nil {
 			return nil, err
 		}
