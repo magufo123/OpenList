@@ -3,7 +3,7 @@ name: Release builds (Android)
 on:
   release:
     types: [ published ]
-
+    
 permissions:
   contents: write
 
