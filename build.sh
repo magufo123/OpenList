@@ -42,7 +42,7 @@ ldflags="\
 -X 'github.com/OpenListTeam/OpenList/internal/v4/conf.GitAuthor=$gitAuthor' \
 -X 'github.com/OpenListTeam/OpenList/internal/v4/conf.GitCommit=$gitCommit' \
 -X 'github.com/OpenListTeam/OpenList/internal/v4/conf.Version=$version' \
--X 'github.com/OpenListTeam/OpenList/internal/v4/conf.WebVersion=$webVersion' \' \
+-X 'github.com/OpenListTeam/OpenList/internal/v4/conf.WebVersion=$webVersion' \
 "
 
 FetchWebDev() {
