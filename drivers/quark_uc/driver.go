@@ -36,6 +36,14 @@ func (d *QuarkOrUC) GetAddition() driver.Additional {
 
 func (d *QuarkOrUC) Init(ctx context.Context) error {
 	_, err := d.request("/config", http.MethodGet, nil, nil)
+	if err == nil {
+		if d.AdditionVersion != 1 {
+			d.AdditionVersion = 1
+			if !d.UseTransCodingAddress {
+				d.WebProxy = true
+			}
+		}
+	}
 	return err
 }
 
