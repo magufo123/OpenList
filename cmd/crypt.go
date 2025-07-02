@@ -71,7 +71,7 @@ func (o *options) validate() {
 	if o.src == "" {
 		log.Fatal("src can not be empty")
 	}
-	if o.Op != "encrypt" && o.op != "decrypt" && o.op != "en" && o.op != "de" {
+	if o.op != "encrypt" && o.op != "decrypt" && o.op != "en" && o.op != "de" {
 		log.Fatal("op must be encrypt or decrypt")
 	}
 	if o.filenameEncryption != "off" && o.filenameEncryption != "standard" && o.filenameEncryption != "obfuscate" {
@@ -136,7 +136,7 @@ func (o *options) cryptFileDir() {
 
 	dirnameMap := make(map[string]string)
 	pathSeparator := string(os.PathSeparator)
-	
+
 	filepath.Walk(src, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Errorf("get file %v info failed, err:%v", p, err)
@@ -195,7 +195,7 @@ func (o *options) cryptFileDir() {
 			checkCreateDir(dd)
 			return nil
 		}
-		
+
 		// file dst dir
 		fdd := dst
 
