@@ -10,7 +10,7 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/singleflight"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/Xhofe/go-cache"
+	"github.com/OpenListTeam/go-cache"
 	"github.com/pkg/errors"
 )
 

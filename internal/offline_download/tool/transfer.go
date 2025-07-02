@@ -17,7 +17,7 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/xhofe/tache"
+	"github.com/OpenListTeam/tache"
 )
 
 type TransferTask struct {

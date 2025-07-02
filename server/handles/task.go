@@ -12,7 +12,7 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/common"
 	"github.com/gin-gonic/gin"
-	"github.com/xhofe/tache"
+	"github.com/OpenListTeam/tache"
 )
 
 type TaskInfo struct {

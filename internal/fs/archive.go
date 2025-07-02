@@ -24,7 +24,7 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/task"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/xhofe/tache"
+	"github.com/OpenListTeam/tache"
 )
 
 type ArchiveDownloadTask struct {

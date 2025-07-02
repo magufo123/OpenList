@@ -7,7 +7,7 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/offline_download/tool"
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/setting"
-	"github.com/xhofe/tache"
+	"github.com/OpenListTeam/tache"
 )
 
 func taskFilterNegative(num int) int64 {

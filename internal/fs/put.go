@@ -11,7 +11,7 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/op"
 	"github.com/OpenListTeam/OpenList/internal/task"
 	"github.com/pkg/errors"
-	"github.com/xhofe/tache"
+	"github.com/OpenListTeam/tache"
 )
 
 type UploadTask struct {

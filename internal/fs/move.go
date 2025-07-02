@@ -17,7 +17,7 @@ import (
 	"github.com/OpenListTeam/OpenList/pkg/utils"
 	"github.com/OpenListTeam/OpenList/server/common"
 	"github.com/pkg/errors"
-	"github.com/xhofe/tache"
+	"github.com/OpenListTeam/tache"
 )
 
 type MoveTask struct {

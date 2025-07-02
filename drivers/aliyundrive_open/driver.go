@@ -13,7 +13,7 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/errs"
 	"github.com/OpenListTeam/OpenList/internal/model"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/Xhofe/rateg"
+	"github.com/OpenListTeam/rateg"
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
 )

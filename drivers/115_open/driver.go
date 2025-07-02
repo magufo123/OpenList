@@ -16,7 +16,7 @@ import (
 	"github.com/OpenListTeam/OpenList/internal/stream"
 	"github.com/OpenListTeam/OpenList/pkg/http_range"
 	"github.com/OpenListTeam/OpenList/pkg/utils"
-	sdk "github.com/xhofe/115-sdk-go"
+	sdk "github.com/OpenListTeam/115-sdk-go"
 	"golang.org/x/time/rate"
 )
 

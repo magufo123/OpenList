@@ -15,7 +15,7 @@ var RootCmd = &cobra.Command{
 	Use:   "openlist",
 	Short: "A file list program that supports multiple storage.",
 	Long: `A file list program that supports multiple storage,
-built with love by Xhofe and friends in Go/Solid.js.
+built with love by OpenListTeam.
 Complete documentation is available at https://docs.openlist.team/`,
 }
 

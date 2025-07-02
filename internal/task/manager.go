@@ -1,7 +1,7 @@
 package task
 
 import (
-	"github.com/xhofe/tache"
+	"github.com/OpenListTeam/tache"
 )
 
 type Manager[T tache.Task] interface {
