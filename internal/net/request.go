@@ -663,15 +663,15 @@ func (br *Buf) Read(p []byte) (n int, err error) {
 		} else {
 			err = io.ErrClosedPipe
 		}
-		br.rw.Unlock()
 		if err != nil && err != io.EOF {
+			br.rw.Unlock()
 			return
 		}
 		if n > 0 {
 			br.off += n
+			br.rw.Unlock()
 			return n, nil
 		}
-		br.rw.Lock()
 		br.readPending = true
 		br.rw.Unlock()
 		// n==0, err==io.EOF
