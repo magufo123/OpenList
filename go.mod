@@ -1,4 +1,4 @@
-module github.com/OpenListTeam/OpenList
+module github.com/OpenListTeam/OpenList/v4
 
 go 1.23.4
 

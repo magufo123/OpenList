@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
-	"github.com/OpenListTeam/OpenList/internal/net"
+	"github.com/OpenListTeam/OpenList/v4/internal/conf"
+	"github.com/OpenListTeam/OpenList/v4/internal/net"
 	"github.com/go-resty/resty/v2"
 )
 

@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/pkg/utils"
+	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
 
-	"github.com/OpenListTeam/OpenList/pkg/http_range"
+	"github.com/OpenListTeam/OpenList/v4/pkg/http_range"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	log "github.com/sirupsen/logrus"
 )

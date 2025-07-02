@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/internal/driver"
-	"github.com/OpenListTeam/OpenList/internal/model"
-	"github.com/OpenListTeam/OpenList/internal/stream"
-	"github.com/OpenListTeam/OpenList/pkg/cron"
-	"github.com/OpenListTeam/OpenList/pkg/utils"
-	"github.com/OpenListTeam/OpenList/server/common"
+	"github.com/OpenListTeam/OpenList/v4/internal/driver"
+	"github.com/OpenListTeam/OpenList/v4/internal/model"
+	"github.com/OpenListTeam/OpenList/v4/internal/stream"
+	"github.com/OpenListTeam/OpenList/v4/pkg/cron"
+	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
+	"github.com/OpenListTeam/OpenList/v4/server/common"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -90,11 +90,11 @@ func (d *S3) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*mo
 	}
 
 	if d.CustomHost == "" {
-			disposition := fmt.Sprintf(`attachment; filename*=UTF-8''%s`, url.PathEscape(fileName))
-			if d.AddFilenameToDisposition {
-				disposition = utils.GenerateContentDisposition(fileName)
-			}
-			input.ResponseContentDisposition = &disposition
+		disposition := fmt.Sprintf(`attachment; filename*=UTF-8''%s`, url.PathEscape(fileName))
+		if d.AddFilenameToDisposition {
+			disposition = utils.GenerateContentDisposition(fileName)
+		}
+		input.ResponseContentDisposition = &disposition
 	}
 
 	req, _ := d.linkClient.GetObjectRequest(input)

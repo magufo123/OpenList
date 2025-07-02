@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/OpenListTeam/OpenList/drivers/pikpak"
-	"github.com/OpenListTeam/OpenList/internal/op"
-	"github.com/OpenListTeam/OpenList/pkg/singleflight"
+	"github.com/OpenListTeam/OpenList/v4/drivers/pikpak"
+	"github.com/OpenListTeam/OpenList/v4/internal/op"
+	"github.com/OpenListTeam/OpenList/v4/pkg/singleflight"
 	"github.com/OpenListTeam/go-cache"
 )
 

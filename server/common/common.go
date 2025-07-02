@@ -3,8 +3,8 @@ package common
 import (
 	"strings"
 
-	"github.com/OpenListTeam/OpenList/cmd/flags"
-	"github.com/OpenListTeam/OpenList/internal/conf"
+	"github.com/OpenListTeam/OpenList/v4/cmd/flags"
+	"github.com/OpenListTeam/OpenList/v4/internal/conf"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )

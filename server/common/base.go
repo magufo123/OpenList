@@ -7,7 +7,7 @@ import (
 	stdpath "path"
 	"strings"
 
-	"github.com/OpenListTeam/OpenList/internal/conf"
+	"github.com/OpenListTeam/OpenList/v4/internal/conf"
 )
 
 func GetApiUrlFormRequest(r *http.Request) string {
