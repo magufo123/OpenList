@@ -126,6 +126,7 @@ const (
 	TaskOfflineDownloadTransferThreadsNum = "offline_download_transfer_task_threads_num"
 	TaskUploadThreadsNum                  = "upload_task_threads_num"
 	TaskCopyThreadsNum                    = "copy_task_threads_num"
+	TaskMoveThreadsNum                    = "move_task_threads_num"
 	TaskDecompressDownloadThreadsNum      = "decompress_download_task_threads_num"
 	TaskDecompressUploadThreadsNum        = "decompress_upload_task_threads_num"
 	StreamMaxClientDownloadSpeed          = "max_client_download_speed"
@@ -147,4 +148,5 @@ const (
 // ContextKey is the type of context keys.
 const (
 	NoTaskKey = "no_task"
+	ApiUrlKey = "api_url"
 )
