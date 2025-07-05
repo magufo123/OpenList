@@ -256,9 +256,6 @@ func (d *HalalCloud) getLink(ctx context.Context, file model.Obj, args model.Lin
 		if httpRange.Length >= 0 && httpRange.Start+httpRange.Length >= size {
 			length = -1
 		}
-		if err != nil {
-			return nil, fmt.Errorf("open download file failed: %w", err)
-		}
 		oo := &openObject{
 			ctx:     ctx,
 			d:       fileAddrs,

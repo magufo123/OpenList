@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 
 	"maps"
@@ -19,21 +18,15 @@ import (
 
 func Proxy(w http.ResponseWriter, r *http.Request, link *model.Link, file model.Obj) error {
 	if link.MFile != nil {
-		defer link.MFile.Close()
+		if clr, ok := link.MFile.(io.Closer); ok {
+			defer clr.Close()
+		}
 		attachHeader(w, file)
 		contentType := link.Header.Get("Content-Type")
 		if contentType != "" {
 			w.Header().Set("Content-Type", contentType)
 		}
-		mFile := link.MFile
-		if _, ok := mFile.(*os.File); !ok {
-			mFile = &stream.RateLimitFile{
-				File:    mFile,
-				Limiter: stream.ServerDownloadLimit,
-				Ctx:     r.Context(),
-			}
-		}
-		http.ServeContent(w, r, file.GetName(), file.ModTime(), mFile)
+		http.ServeContent(w, r, file.GetName(), file.ModTime(), link.MFile)
 		return nil
 	} else if link.RangeReadCloser != nil {
 		attachHeader(w, file)

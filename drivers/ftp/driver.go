@@ -7,6 +7,7 @@ import (
 	"github.com/OpenListTeam/OpenList/v4/internal/driver"
 	"github.com/OpenListTeam/OpenList/v4/internal/errs"
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
+	"github.com/OpenListTeam/OpenList/v4/internal/stream"
 	"github.com/jlaffaye/ftp"
 )
 
@@ -66,7 +67,11 @@ func (d *FTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 
 	r := NewFileReader(d.conn, encode(file.GetPath(), d.Encoding), file.GetSize())
 	link := &model.Link{
-		MFile: r,
+		MFile: &stream.RateLimitFile{
+			File:    r,
+			Limiter: stream.ServerDownloadLimit,
+			Ctx:     ctx,
+		},
 	}
 	return link, nil
 }

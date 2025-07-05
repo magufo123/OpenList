@@ -113,6 +113,7 @@ func (d *Alias) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 	for _, dst := range dsts {
 		link, err := d.link(ctx, dst, sub, args)
 		if err == nil {
+			link.Expiration = nil // 去除非必要缓存，d.link里op.Lin有缓存
 			if !args.Redirect && len(link.URL) > 0 {
 				// 正常情况下 多并发 仅支持返回URL的驱动
 				// alias套娃alias 可以让crypt、mega等驱动(不返回URL的) 支持并发

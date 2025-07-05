@@ -390,14 +390,13 @@ func Link(c *gin.Context) {
 		common.ErrorResp(c, err, 500)
 		return
 	}
-	if link.MFile != nil {
-		defer func(ReadSeekCloser io.ReadCloser) {
-			err := ReadSeekCloser.Close()
+	if clr, ok := link.MFile.(io.Closer); ok {
+		defer func(clr io.Closer) {
+			err := clr.Close()
 			if err != nil {
 				log.Errorf("close link data error: %v", err)
 			}
-		}(link.MFile)
+		}(clr)
 	}
 	common.SuccessResp(c, link)
-	return
 }

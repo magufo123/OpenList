@@ -182,11 +182,10 @@ func (d *downloader) download() (io.ReadCloser, error) {
 			defer d.m.Unlock()
 			if closeFunc != nil {
 				d.concurrencyFinish()
-				err := closeFunc()
+				err = closeFunc()
 				closeFunc = nil
-				return err
 			}
-			return nil
+			return err
 		})
 		return resp.Body, nil
 	}
@@ -272,24 +271,30 @@ func (d *downloader) sendChunkTask(newConcurrency bool) error {
 
 // when the final reader Close, we interrupt
 func (d *downloader) interrupt() error {
-	if d.written != d.params.Range.Length {
+	d.m.Lock()
+	defer d.m.Unlock()
+	err := d.err
+	if err == nil && d.written != d.params.Range.Length {
 		log.Debugf("Downloader interrupt before finish")
-		if d.getErr() == nil {
-			d.setErr(fmt.Errorf("interrupted"))
-		}
+		err := fmt.Errorf("interrupted")
+		d.err = err
 	}
-	d.cancel(d.err)
-	defer func() {
+	if d.chunkChannel != nil {
+		d.cancel(err)
 		close(d.chunkChannel)
+		d.chunkChannel = nil
 		for _, buf := range d.bufs {
 			buf.Close()
 		}
+		d.bufs = nil
 		if d.concurrency > 0 {
 			d.concurrency = -d.concurrency
 		}
 		log.Debugf("maxConcurrency:%d", d.cfg.Concurrency+d.concurrency)
-	}()
-	return d.err
+	} else {
+		log.Debug("close of closed channel")
+	}
+	return err
 }
 func (d *downloader) getBuf(id int) (b *Buf) {
 	return d.bufs[id%len(d.bufs)]
@@ -364,7 +369,7 @@ func (d *downloader) downloadChunk(ch *chunk) error {
 		if e, ok := err.(*errNeedRetry); ok {
 			err = e.Unwrap()
 			if n > 0 {
-				// 测试：下载时 断开 openlist向云盘发起的下载连接
+				// 测试：下载时 断开openlist向云盘发起的下载连接
 				// 校验：下载完后校验文件哈希值 一致
 				d.incrWritten(n)
 				ch.start += n

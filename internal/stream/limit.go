@@ -135,6 +135,13 @@ func (r *RateLimitFile) ReadAt(p []byte, off int64) (n int, err error) {
 	return
 }
 
+func (r *RateLimitFile) Close() error {
+	if c, ok := r.File.(io.Closer); ok {
+		return c.Close()
+	}
+	return nil
+}
+
 type RateLimitRangeReadCloser struct {
 	model.RangeReadCloserIF
 	Limiter Limiter

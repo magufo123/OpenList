@@ -8,6 +8,7 @@ import (
 	"github.com/OpenListTeam/OpenList/v4/internal/driver"
 	"github.com/OpenListTeam/OpenList/v4/internal/errs"
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
+	"github.com/OpenListTeam/OpenList/v4/internal/stream"
 	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
 	"github.com/pkg/sftp"
 	log "github.com/sirupsen/logrus"
@@ -62,10 +63,13 @@ func (d *SFTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 	if err != nil {
 		return nil, err
 	}
-	link := &model.Link{
-		MFile: remoteFile,
-	}
-	return link, nil
+	return &model.Link{
+		MFile: &stream.RateLimitFile{
+			File:    remoteFile,
+			Limiter: stream.ServerDownloadLimit,
+			Ctx:     ctx,
+		},
+	}, nil
 }
 
 func (d *SFTP) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {
