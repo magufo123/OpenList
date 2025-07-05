@@ -133,8 +133,16 @@ func (d *Strm) getLink(ctx context.Context, path string) string {
 	} else {
 		apiUrl = common.GetApiUrl(ctx)
 	}
+
+	if d.EncodePath {
+		path = utils.EncodePath(path, true)
+	}
+	if !d.UseSign {
+		return fmt.Sprintf("%s/d%s", apiUrl, path)
+	}
+
 	return fmt.Sprintf("%s/d%s?sign=%s",
 		apiUrl,
-		utils.EncodePath(path, true),
+		path,
 		sign.Sign(path))
 }
