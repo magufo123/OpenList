@@ -29,6 +29,7 @@ const (
 	DeleteOnUploadFailed  DeletePolicy = "delete_on_upload_failed"
 	DeleteNever           DeletePolicy = "delete_never"
 	DeleteAlways          DeletePolicy = "delete_always"
+	UploadDownloadStream  DeletePolicy = "upload_download_stream"
 )
 
 type AddURLArgs struct {
@@ -71,13 +72,13 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 	// get tool
 	tool, err := Tools.Get(args.Tool)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed get tool")
+		return nil, errors.Wrapf(err, "failed get offline download tool")
 	}
 	// check tool is ready
 	if !tool.IsReady() {
 		// try to init tool
 		if _, err := tool.Init(); err != nil {
-			return nil, errors.Wrapf(err, "failed init tool %s", args.Tool)
+			return nil, errors.Wrapf(err, "failed init offline download tool %s", args.Tool)
 		}
 	}
 
