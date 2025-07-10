@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	sdk "github.com/OpenListTeam/115-sdk-go"
 	"github.com/OpenListTeam/OpenList/v4/cmd/flags"
 	"github.com/OpenListTeam/OpenList/v4/drivers/base"
 	"github.com/OpenListTeam/OpenList/v4/internal/driver"
@@ -16,7 +17,6 @@ import (
 	"github.com/OpenListTeam/OpenList/v4/internal/stream"
 	"github.com/OpenListTeam/OpenList/v4/pkg/http_range"
 	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
-	sdk "github.com/OpenListTeam/115-sdk-go"
 	"golang.org/x/time/rate"
 )
 
@@ -222,7 +222,9 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 	}
 	sha1 := file.GetHash().GetHash(utils.SHA1)
 	if len(sha1) != utils.SHA1.Width {
-		_, sha1, err = stream.CacheFullInTempFileAndHash(file, utils.SHA1)
+		cacheFileProgress := model.UpdateProgressWithRange(up, 0, 50)
+		up = model.UpdateProgressWithRange(up, 50, 100)
+		_, sha1, err = stream.CacheFullInTempFileAndHash(file, cacheFileProgress, utils.SHA1)
 		if err != nil {
 			return err
 		}
@@ -252,6 +254,7 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 		return err
 	}
 	if resp.Status == 2 {
+		up(100)
 		return nil
 	}
 	// 2. two way verify
@@ -286,6 +289,7 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 			return err
 		}
 		if resp.Status == 2 {
+			up(100)
 			return nil
 		}
 	}
