@@ -25,7 +25,7 @@ else
   git tag -d beta || true
   # Always true if there's no tag
   version=$(git describe --abbrev=0 --tags 2>/dev/null || echo "v0.0.0")
-  webVersion=$(eval "curl -fsSL --max-time 2 $githubAuthArgs \"https://api.github.com/repos/lyy2005a3/OpenList-Frontend/releases/latest\"" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
+  webVersion=$(eval "curl -fsSL --max-time 2 $githubAuthArgs \"https://api.github.com/repos/lyy2005a2/OpenList-Frontend/releases/latest\"" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g')
 fi
 
 echo "backend version: $version"
@@ -46,12 +46,12 @@ ldflags="\
 "
 
 FetchWebDev() {
-  pre_release_tag=$(eval "curl -fsSL --max-time 2 $githubAuthArgs https://api.github.com/repos/lyy2005a3/OpenList-Frontend/releases" | jq -r 'map(select(.prerelease)) | first | .tag_name')
+  pre_release_tag=$(eval "curl -fsSL --max-time 2 $githubAuthArgs https://api.github.com/repos/lyy2005a2/OpenList-Frontend/releases" | jq -r 'map(select(.prerelease)) | first | .tag_name')
   if [ -z "$pre_release_tag" ] || [ "$pre_release_tag" == "null" ]; then
     # fall back to latest release
-    pre_release_json=$(eval "curl -fsSL --max-time 2 $githubAuthArgs -H \"Accept: application/vnd.github.v3+json\" \"https://api.github.com/repos/lyy2005a3/OpenList-Frontend/releases/latest\"")
+    pre_release_json=$(eval "curl -fsSL --max-time 2 $githubAuthArgs -H \"Accept: application/vnd.github.v3+json\" \"https://api.github.com/repos/lyy2005a2/OpenList-Frontend/releases/latest\"")
   else
-    pre_release_json=$(eval "curl -fsSL --max-time 2 $githubAuthArgs -H \"Accept: application/vnd.github.v3+json\" \"https://api.github.com/repos/lyy2005a3/OpenList-Frontend/releases/tags/$pre_release_tag\"")
+    pre_release_json=$(eval "curl -fsSL --max-time 2 $githubAuthArgs -H \"Accept: application/vnd.github.v3+json\" \"https://api.github.com/repos/lyy2005a2/OpenList-Frontend/releases/tags/$pre_release_tag\"")
   fi
   pre_release_assets=$(echo "$pre_release_json" | jq -r '.assets[].browser_download_url')
   
@@ -68,7 +68,7 @@ FetchWebDev() {
 }
 
 FetchWebRelease() {
-  release_json=$(eval "curl -fsSL --max-time 2 $githubAuthArgs -H \"Accept: application/vnd.github.v3+json\" \"https://api.github.com/repos/lyy2005a3/OpenList-Frontend/releases/latest\"")
+  release_json=$(eval "curl -fsSL --max-time 2 $githubAuthArgs -H \"Accept: application/vnd.github.v3+json\" \"https://api.github.com/repos/lyy2005a2/OpenList-Frontend/releases/latest\"")
   release_assets=$(echo "$release_json" | jq -r '.assets[].browser_download_url')
   
   if [ "$useLite" = true ]; then
