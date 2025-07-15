@@ -181,7 +181,7 @@ func (t *DownloadTask) Transfer() error {
 		if err != nil {
 			return errors.WithMessage(err, "failed get dst storage")
 		}
-		taskCreator, _ := ctx.Value(conf.UserKey).(*model.User)
+		taskCreator, _ := t.Ctx().Value(conf.UserKey).(*model.User)
 		task := &TransferTask{
 			TaskExtension: task.TaskExtension{
 				Creator: taskCreator,
