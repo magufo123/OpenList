@@ -315,6 +315,7 @@ func FsGet(c *gin.Context) {
 					common.ErrorResp(c, err, 500)
 					return
 				}
+				defer link.Close()
 				rawURL = link.URL
 			}
 		}

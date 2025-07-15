@@ -30,7 +30,7 @@ func (d *SFTP) GetAddition() driver.Additional {
 }
 
 func (d *SFTP) Init(ctx context.Context) error {
-	return d.initClient()
+	return d._initClient()
 }
 
 func (d *SFTP) Drop(ctx context.Context) error {
@@ -62,6 +62,14 @@ func (d *SFTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*
 	remoteFile, err := d.client.Open(file.GetPath())
 	if err != nil {
 		return nil, err
+	}
+	if remoteFile != nil && !d.Config().OnlyLinkMFile {
+		return &model.Link{
+			RangeReader: &model.FileRangeReader{
+				RangeReaderIF: stream.RateLimitRangeReaderFunc(stream.GetRangeReaderFromMFile(file.GetSize(), remoteFile)),
+			},
+			SyncClosers: utils.NewSyncClosers(remoteFile),
+		}, nil
 	}
 	return &model.Link{
 		MFile: &stream.RateLimitFile{

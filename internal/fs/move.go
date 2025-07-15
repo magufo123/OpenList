@@ -3,7 +3,6 @@ package fs
 import (
 	"context"
 	"fmt"
-	"net/http"
 	stdpath "path"
 	"sync"
 	"time"
@@ -346,23 +345,18 @@ func (t *MoveTask) copyFile(srcStorage, dstStorage driver.Driver, srcFilePath, d
 		return errors.WithMessagef(err, "failed get src [%s] file", srcFilePath)
 	}
 
-	link, _, err := op.Link(t.Ctx(), srcStorage, srcFilePath, model.LinkArgs{
-		Header: http.Header{},
-	})
+	link, _, err := op.Link(t.Ctx(), srcStorage, srcFilePath, model.LinkArgs{})
 	if err != nil {
 		return errors.WithMessagef(err, "failed get [%s] link", srcFilePath)
 	}
-
-	fs := stream.FileStream{
+	ss, err := stream.NewSeekableStream(&stream.FileStream{
 		Obj: srcFile,
 		Ctx: t.Ctx(),
-	}
-
-	ss, err := stream.NewSeekableStream(fs, link)
+	}, link)
 	if err != nil {
+		_ = link.Close()
 		return errors.WithMessagef(err, "failed get [%s] stream", srcFilePath)
 	}
-
 	return op.Put(t.Ctx(), dstStorage, dstDirPath, ss, nil, true)
 }
 

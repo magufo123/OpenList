@@ -37,7 +37,7 @@ type Obj interface {
 // FileStreamer ->check FileStream for more comments
 type FileStreamer interface {
 	io.Reader
-	io.Closer
+	utils.ClosersIF
 	Obj
 	GetMimetype() string
 	//SetReader(io.Reader)

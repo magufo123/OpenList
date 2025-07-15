@@ -3,7 +3,6 @@ package tool
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	stdpath "path"
 	"path/filepath"
@@ -43,11 +42,11 @@ func (t *TransferTask) Run() error {
 	defer func() { t.SetEndTime(time.Now()) }()
 	if t.SrcStorage == nil {
 		if t.DeletePolicy == UploadDownloadStream {
-			rrc, err := stream.GetRangeReadCloserFromLink(t.GetTotalBytes(), &model.Link{URL: t.Url})
+			rr, err := stream.GetRangeReaderFromLink(t.GetTotalBytes(), &model.Link{URL: t.Url})
 			if err != nil {
 				return err
 			}
-			r, err := rrc.RangeRead(t.Ctx(), http_range.Range{Length: t.GetTotalBytes()})
+			r, err := rr.RangeRead(t.Ctx(), http_range.Range{Length: t.GetTotalBytes()})
 			if err != nil {
 				return err
 			}
@@ -63,9 +62,8 @@ func (t *TransferTask) Run() error {
 				},
 				Reader:   r,
 				Mimetype: mimetype,
-				Closers:  utils.NewClosers(rrc),
+				Closers:  utils.NewClosers(r),
 			}
-			defer s.Close()
 			return op.Put(t.Ctx(), t.DstStorage, t.DstDirPath, s, t.SetProgress)
 		}
 		return transferStdPath(t)
@@ -279,19 +277,17 @@ func transferObjFile(t *TransferTask) error {
 	if err != nil {
 		return errors.WithMessagef(err, "failed get src [%s] file", t.SrcObjPath)
 	}
-	link, _, err := op.Link(t.Ctx(), t.SrcStorage, t.SrcObjPath, model.LinkArgs{
-		Header: http.Header{},
-	})
+	link, _, err := op.Link(t.Ctx(), t.SrcStorage, t.SrcObjPath, model.LinkArgs{})
 	if err != nil {
 		return errors.WithMessagef(err, "failed get [%s] link", t.SrcObjPath)
 	}
-	fs := stream.FileStream{
+	// any link provided is seekable
+	ss, err := stream.NewSeekableStream(&stream.FileStream{
 		Obj: srcFile,
 		Ctx: t.Ctx(),
-	}
-	// any link provided is seekable
-	ss, err := stream.NewSeekableStream(fs, link)
+	}, link)
 	if err != nil {
+		_ = link.Close()
 		return errors.WithMessagef(err, "failed get [%s] stream", t.SrcObjPath)
 	}
 	t.SetTotalBytes(srcFile.GetSize())

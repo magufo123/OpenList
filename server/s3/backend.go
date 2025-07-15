@@ -142,7 +142,7 @@ func (b *s3Backend) HeadObject(ctx context.Context, bucketName, objectName strin
 }
 
 // GetObject fetchs the object from the filesystem.
-func (b *s3Backend) GetObject(ctx context.Context, bucketName, objectName string, rangeRequest *gofakes3.ObjectRangeRequest) (obj *gofakes3.Object, err error) {
+func (b *s3Backend) GetObject(ctx context.Context, bucketName, objectName string, rangeRequest *gofakes3.ObjectRangeRequest) (s3Obj *gofakes3.Object, err error) {
 	bucket, err := getBucketByName(bucketName)
 	if err != nil {
 		return nil, err
@@ -164,6 +164,11 @@ func (b *s3Backend) GetObject(ctx context.Context, bucketName, objectName string
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		if s3Obj == nil {
+			_ = link.Close()
+		}
+	}()
 
 	size := file.GetSize()
 	rnge, err := rangeRequest.Range(size)
@@ -171,49 +176,19 @@ func (b *s3Backend) GetObject(ctx context.Context, bucketName, objectName string
 		return nil, err
 	}
 
-	if link.RangeReadCloser == nil && link.MFile == nil && len(link.URL) == 0 {
+	rrf, err := stream.GetRangeReaderFromLink(size, link)
+	if err != nil {
 		return nil, fmt.Errorf("the remote storage driver need to be enhanced to support s3")
 	}
 
-	var rdr io.ReadCloser
-	length := int64(-1)
-	start := int64(0)
+	var rd io.Reader
 	if rnge != nil {
-		start, length = rnge.Start, rnge.Length
-	}
-	// 参考 server/common/proxy.go
-	if link.MFile != nil {
-		_, err := link.MFile.Seek(start, io.SeekStart)
-		if err != nil {
-			return nil, err
-		}
-		if rdr2, ok := link.MFile.(io.ReadCloser); ok {
-			rdr = rdr2
-		} else {
-			rdr = io.NopCloser(link.MFile)
-		}
+		rd, err = rrf.RangeRead(ctx, http_range.Range(*rnge))
 	} else {
-		remoteFileSize := file.GetSize()
-		if length >= 0 && start+length >= remoteFileSize {
-			length = -1
-		}
-		rrc := link.RangeReadCloser
-		if len(link.URL) > 0 {
-			var converted, err = stream.GetRangeReadCloserFromLink(remoteFileSize, link)
-			if err != nil {
-				return nil, err
-			}
-			rrc = converted
-		}
-		if rrc != nil {
-			remoteReader, err := rrc.RangeRead(ctx, http_range.Range{Start: start, Length: length})
-			if err != nil {
-				return nil, err
-			}
-			rdr = utils.ReadCloser{Reader: remoteReader, Closer: rrc}
-		} else {
-			return nil, errs.NotSupport
-		}
+		rd, err = rrf.RangeRead(ctx, http_range.Range{Length: -1})
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	meta := map[string]string{
@@ -236,7 +211,7 @@ func (b *s3Backend) GetObject(ctx context.Context, bucketName, objectName string
 		Metadata: meta,
 		Size:     size,
 		Range:    rnge,
-		Contents: rdr,
+		Contents: utils.ReadCloser{Reader: rd, Closer: link},
 	}, nil
 }
 
@@ -318,11 +293,11 @@ func (b *s3Backend) PutObject(
 		return result, err
 	}
 
-	if err := stream.Close(); err != nil {
-		// remove file when close error occurred (FsPutErr)
-		_ = fs.Remove(ctx, fp)
-		return result, err
-	}
+	// if err := stream.Close(); err != nil {
+	// 	// remove file when close error occurred (FsPutErr)
+	// 	_ = fs.Remove(ctx, fp)
+	// 	return result, err
+	// }
 
 	b.meta.Store(fp, meta)
 

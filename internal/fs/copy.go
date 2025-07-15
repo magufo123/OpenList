@@ -3,7 +3,6 @@ package fs
 import (
 	"context"
 	"fmt"
-	"net/http"
 	stdpath "path"
 	"time"
 
@@ -86,19 +85,17 @@ func _copy(ctx context.Context, srcObjPath, dstDirPath string, lazyCache ...bool
 		}
 		if !srcObj.IsDir() {
 			// copy file directly
-			link, _, err := op.Link(ctx, srcStorage, srcObjActualPath, model.LinkArgs{
-				Header: http.Header{},
-			})
+			link, _, err := op.Link(ctx, srcStorage, srcObjActualPath, model.LinkArgs{})
 			if err != nil {
 				return nil, errors.WithMessagef(err, "failed get [%s] link", srcObjPath)
 			}
-			fs := stream.FileStream{
+			// any link provided is seekable
+			ss, err := stream.NewSeekableStream(&stream.FileStream{
 				Obj: srcObj,
 				Ctx: ctx,
-			}
-			// any link provided is seekable
-			ss, err := stream.NewSeekableStream(fs, link)
+			},link)
 			if err != nil {
+				_ = link.Close()
 				return nil, errors.WithMessagef(err, "failed get [%s] stream", srcObjPath)
 			}
 			return nil, op.Put(ctx, dstStorage, dstDirActualPath, ss, nil, false)
@@ -165,19 +162,17 @@ func copyFileBetween2Storages(tsk *CopyTask, srcStorage, dstStorage driver.Drive
 		return errors.WithMessagef(err, "failed get src [%s] file", srcFilePath)
 	}
 	tsk.SetTotalBytes(srcFile.GetSize())
-	link, _, err := op.Link(tsk.Ctx(), srcStorage, srcFilePath, model.LinkArgs{
-		Header: http.Header{},
-	})
+	link, _, err := op.Link(tsk.Ctx(), srcStorage, srcFilePath, model.LinkArgs{})
 	if err != nil {
 		return errors.WithMessagef(err, "failed get [%s] link", srcFilePath)
 	}
-	fs := stream.FileStream{
+	// any link provided is seekable
+	ss, err := stream.NewSeekableStream(&stream.FileStream{
 		Obj: srcFile,
 		Ctx: tsk.Ctx(),
-	}
-	// any link provided is seekable
-	ss, err := stream.NewSeekableStream(fs, link)
+	}, link)
 	if err != nil {
+		_ = link.Close()
 		return errors.WithMessagef(err, "failed get [%s] stream", srcFilePath)
 	}
 	return op.Put(tsk.Ctx(), dstStorage, dstDirPath, ss, tsk.SetProgress, true)

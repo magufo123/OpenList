@@ -13,17 +13,9 @@ type Addition struct {
 }
 
 var config = driver.Config{
-	Name:              "LenovoNasShare",
-	LocalSort:         true,
-	OnlyLocal:         false,
-	OnlyProxy:         false,
-	NoCache:           false,
-	NoUpload:          true,
-	NeedMs:            false,
-	DefaultRoot:       "",
-	CheckStatus:       false,
-	Alert:             "",
-	NoOverwriteUpload: false,
+	Name:      "LenovoNasShare",
+	LocalSort: true,
+	NoUpload:  true,
 }
 
 func init() {

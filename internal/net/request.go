@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/OpenListTeam/OpenList/v4/internal/model"
 	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
 
 	"github.com/OpenListTeam/OpenList/v4/pkg/http_range"
@@ -70,7 +71,7 @@ func (d Downloader) Download(ctx context.Context, p *HttpRequestParams) (readClo
 
 	var finalP HttpRequestParams
 	awsutil.Copy(&finalP, p)
-	if finalP.Range.Length == -1 {
+	if finalP.Range.Length < 0 || finalP.Range.Start+finalP.Range.Length > finalP.Size {
 		finalP.Range.Length = finalP.Size - finalP.Range.Start
 	}
 	impl := downloader{params: &finalP, cfg: d, ctx: ctx}
@@ -120,7 +121,7 @@ type ConcurrencyLimit struct {
 	Limit int // 需要大于0
 }
 
-var ErrExceedMaxConcurrency = errors.New("ExceedMaxConcurrency")
+var ErrExceedMaxConcurrency = ErrorHttpStatusCode(http.StatusTooManyRequests)
 
 func (l *ConcurrencyLimit) sub() error {
 	l._m.Lock()
@@ -181,6 +182,7 @@ func (d *downloader) download() (io.ReadCloser, error) {
 		resp.Body = utils.NewReadCloser(resp.Body, func() error {
 			d.m.Lock()
 			defer d.m.Unlock()
+			var err error
 			if closeFunc != nil {
 				d.concurrencyFinish()
 				err = closeFunc()
@@ -199,7 +201,7 @@ func (d *downloader) download() (io.ReadCloser, error) {
 	d.pos = d.params.Range.Start
 	d.maxPos = d.params.Range.Start + d.params.Range.Length
 	d.concurrency = d.cfg.Concurrency
-	d.sendChunkTask(true)
+	_ = d.sendChunkTask(true)
 
 	var rc io.ReadCloser = NewMultiReadCloser(d.bufs[0], d.interrupt, d.finishBuf)
 
@@ -303,7 +305,7 @@ func (d *downloader) finishBuf(id int) (isLast bool, nextBuf *Buf) {
 		return true, nil
 	}
 
-	d.sendChunkTask(false)
+	_ = d.sendChunkTask(false)
 
 	d.readingID = id
 	return false, d.getBuf(id)
@@ -398,14 +400,15 @@ var errInfiniteRetry = errors.New("infinite retry")
 func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int64, error) {
 	resp, err := d.cfg.HttpClient(d.ctx, params)
 	if err != nil {
-		if resp == nil {
+		statusCode, ok := errors.Unwrap(err).(ErrorHttpStatusCode)
+		if !ok {
 			return 0, err
 		}
-		if resp.StatusCode == http.StatusRequestedRangeNotSatisfiable {
+		if statusCode == http.StatusRequestedRangeNotSatisfiable {
 			return 0, err
 		}
 		if ch.id == 0 { //第1个任务 有限的重试，超过重试就会结束请求
-			switch resp.StatusCode {
+			switch statusCode {
 			default:
 				return 0, err
 			case http.StatusTooManyRequests:
@@ -414,7 +417,7 @@ func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int
 			case http.StatusGatewayTimeout:
 			}
 			<-time.After(time.Millisecond * 200)
-			return 0, &errNeedRetry{err: fmt.Errorf("http request failure,status: %d", resp.StatusCode)}
+			return 0, &errNeedRetry{err: err}
 		}
 
 		// 来到这 说明第1个分片下载 连接成功了
@@ -450,7 +453,7 @@ func (d *downloader) tryDownloadChunk(params *HttpRequestParams, ch *chunk) (int
 			return 0, err
 		}
 	}
-	d.sendChunkTask(true)
+	_ = d.sendChunkTask(true)
 	n, err := utils.CopyWithBuffer(ch.buf, resp.Body)
 
 	if err != nil {
@@ -552,12 +555,26 @@ type chunk struct {
 
 func DefaultHttpRequestFunc(ctx context.Context, params *HttpRequestParams) (*http.Response, error) {
 	header := http_range.ApplyRangeToHttpHeader(params.Range, params.HeaderRef)
+	return RequestHttp(ctx, "GET", header, params.URL)
+}
 
-	res, err := RequestHttp(ctx, "GET", header, params.URL)
-	if err != nil {
-		return res, err
+	func GetRangeReaderHttpRequestFunc(rangeReader model.RangeReaderIF) HttpRequestFunc {
+	return func(ctx context.Context, params *HttpRequestParams) (*http.Response, error) {
+		rc, err := rangeReader.RangeRead(ctx, params.Range)
+		if err != nil {
+			return nil, err
+		}
+
+		return &http.Response{
+			StatusCode: http.StatusPartialContent,
+			Status:     http.StatusText(http.StatusPartialContent),
+			Body:       rc,
+			Header: http.Header{
+				"Content-Range": {params.Range.ContentRange(params.Size)},
+			},
+			ContentLength: params.Range.Length,
+		}, nil
 	}
-	return res, nil
 }
 
 type HttpRequestParams struct {

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/url"
 	stdpath "path"
 	"strings"
@@ -158,7 +157,7 @@ func (d *S3) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) e
 			Name:     getPlaceholderName(d.Placeholder),
 			Modified: time.Now(),
 		},
-		Reader:   io.NopCloser(bytes.NewReader([]byte{})),
+		Reader:   bytes.NewReader([]byte{}),
 		Mimetype: "application/octet-stream",
 	}, func(float64) {})
 }

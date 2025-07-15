@@ -10,6 +10,7 @@ import (
 	"github.com/OpenListTeam/OpenList/v4/internal/driver"
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
 	"github.com/OpenListTeam/OpenList/v4/internal/sign"
+	"github.com/OpenListTeam/OpenList/v4/internal/stream"
 	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
 	"github.com/OpenListTeam/OpenList/v4/pkg/utils/random"
 	"github.com/OpenListTeam/OpenList/v4/server/common"
@@ -54,7 +55,9 @@ func (lrc *LyricObj) getProxyLink(ctx context.Context) *model.Link {
 
 func (lrc *LyricObj) getLyricLink() *model.Link {
 	return &model.Link{
-		MFile: strings.NewReader(lrc.lyric),
+		RangeReader: &model.FileRangeReader{
+			RangeReaderIF: stream.GetRangeReaderFromMFile(int64(len(lrc.lyric)), strings.NewReader(lrc.lyric)),
+		},
 	}
 }
 

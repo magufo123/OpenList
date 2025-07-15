@@ -3,6 +3,7 @@ package alias
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	stdpath "path"
 	"strings"
@@ -11,8 +12,10 @@ import (
 	"github.com/OpenListTeam/OpenList/v4/internal/errs"
 	"github.com/OpenListTeam/OpenList/v4/internal/fs"
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
+	"github.com/OpenListTeam/OpenList/v4/internal/sign"
 	"github.com/OpenListTeam/OpenList/v4/internal/stream"
 	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
+	"github.com/OpenListTeam/OpenList/v4/server/common"
 )
 
 type Alias struct {
@@ -111,21 +114,43 @@ func (d *Alias) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		return nil, errs.ObjectNotFound
 	}
 	for _, dst := range dsts {
-		link, err := d.link(ctx, dst, sub, args)
-		if err == nil {
-			link.Expiration = nil // 去除非必要缓存，d.link里op.Lin有缓存
-			if !args.Redirect && len(link.URL) > 0 {
-				// 正常情况下 多并发 仅支持返回URL的驱动
-				// alias套娃alias 可以让crypt、mega等驱动(不返回URL的) 支持并发
-				if d.DownloadConcurrency > 0 {
-					link.Concurrency = d.DownloadConcurrency
-				}
-				if d.DownloadPartSize > 0 {
-					link.PartSize = d.DownloadPartSize * utils.KB
+		reqPath := stdpath.Join(dst, sub)
+		link, file, err := d.link(ctx, reqPath, args)
+		if err != nil {
+			continue
+		}
+		var resultLink *model.Link
+		if link != nil {
+			resultLink = &model.Link{
+				URL:         link.URL,
+				Header:      link.Header,
+				RangeReader: link.RangeReader,
+				SyncClosers: utils.NewSyncClosers(link),
+			}
+			if link.MFile != nil {
+				resultLink.RangeReader = &model.FileRangeReader{
+					RangeReaderIF: stream.GetRangeReaderFromMFile(file.GetSize(), link.MFile),
 				}
 			}
-			return link, nil
+
+		} else {
+			resultLink = &model.Link{
+				URL: fmt.Sprintf("%s/p%s?sign=%s",
+					common.GetApiUrl(ctx),
+					utils.EncodePath(reqPath, true),
+					sign.Sign(reqPath)),
+			}
+
 		}
+		if !args.Redirect {
+			if d.DownloadConcurrency > 0 {
+				resultLink.Concurrency = d.DownloadConcurrency
+			}
+			if d.DownloadPartSize > 0 {
+				resultLink.PartSize = d.DownloadPartSize * utils.KB
+			}
+		}
+		return resultLink, nil
 	}
 	return nil, errs.ObjectNotFound
 }
@@ -251,9 +276,13 @@ func (d *Alias) Put(ctx context.Context, dstDir model.Obj, s model.FileStreamer,
 	reqPath, err := d.getReqPath(ctx, dstDir, true)
 	if err == nil {
 		if len(reqPath) == 1 {
-			return fs.PutDirectly(ctx, *reqPath[0], s)
+			return fs.PutDirectly(ctx, *reqPath[0], &stream.FileStream{
+				Obj:          s,
+				Mimetype:     s.GetMimetype(),
+				WebPutAsTask: s.NeedStore(),
+				Reader:       s,
+			})
 		} else {
-			defer s.Close()
 			file, err := s.CacheFullInTempFile()
 			if err != nil {
 				return err
@@ -338,14 +367,6 @@ func (d *Alias) Extract(ctx context.Context, obj model.Obj, args model.ArchiveIn
 	for _, dst := range dsts {
 		link, err := d.extract(ctx, dst, sub, args)
 		if err == nil {
-			if !args.Redirect && len(link.URL) > 0 {
-				if d.DownloadConcurrency > 0 {
-					link.Concurrency = d.DownloadConcurrency
-				}
-				if d.DownloadPartSize > 0 {
-					link.PartSize = d.DownloadPartSize * utils.KB
-				}
-			}
 			return link, nil
 		}
 	}

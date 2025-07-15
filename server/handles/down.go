@@ -2,8 +2,8 @@ package handles
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
-	"io"
 	stdpath "path"
 	"strconv"
 	"strings"
@@ -12,6 +12,7 @@ import (
 	"github.com/OpenListTeam/OpenList/v4/internal/driver"
 	"github.com/OpenListTeam/OpenList/v4/internal/fs"
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
+	"github.com/OpenListTeam/OpenList/v4/internal/net"
 	"github.com/OpenListTeam/OpenList/v4/internal/setting"
 	"github.com/OpenListTeam/OpenList/v4/internal/sign"
 	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
@@ -44,7 +45,7 @@ func Down(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-		down(c, link)
+		redirect(c, link)
 	}
 }
 
@@ -77,22 +78,15 @@ func Proxy(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-		localProxy(c, link, file, storage.GetStorage().ProxyRange)
+		proxy(c, link, file, storage.GetStorage().ProxyRange)
 	} else {
 		common.ErrorStrResp(c, "proxy not allowed", 403)
 		return
 	}
 }
 
-func down(c *gin.Context, link *model.Link) {
-	if clr, ok := link.MFile.(io.Closer); ok {
-		defer func(clr io.Closer) {
-			err := clr.Close()
-			if err != nil {
-				log.Errorf("close link data error: %v", err)
-			}
-		}(clr)
-	}
+func redirect(c *gin.Context, link *model.Link) {
+	defer link.Close()
 	var err error
 	c.Header("Referrer-Policy", "no-referrer")
 	c.Header("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
@@ -110,7 +104,8 @@ func down(c *gin.Context, link *model.Link) {
 	c.Redirect(302, link.URL)
 }
 
-func localProxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange bool) {
+func proxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange bool) {
+	defer link.Close()
 	var err error
 	if link.URL != "" && setting.GetBool(conf.ForwardDirectLinkParams) {
 		query := c.Request.URL.Query()
@@ -161,7 +156,11 @@ func localProxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange boo
 	if Writer.IsWritten() {
 		log.Errorf("%s %s local proxy error: %+v", c.Request.Method, c.Request.URL.Path, err)
 	} else {
-		common.ErrorResp(c, err, 500, true)
+		if statusCode, ok := errors.Unwrap(err).(net.ErrorHttpStatusCode); ok {
+			common.ErrorResp(c, err, int(statusCode), true)
+		} else {
+			common.ErrorResp(c, err, 500, true)
+		}
 	}
 }
 

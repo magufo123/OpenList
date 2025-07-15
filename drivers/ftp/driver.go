@@ -8,6 +8,7 @@ import (
 	"github.com/OpenListTeam/OpenList/v4/internal/errs"
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
 	"github.com/OpenListTeam/OpenList/v4/internal/stream"
+	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
 	"github.com/jlaffaye/ftp"
 )
 
@@ -26,7 +27,7 @@ func (d *FTP) GetAddition() driver.Additional {
 }
 
 func (d *FTP) Init(ctx context.Context) error {
-	return d.login()
+	return d._login()
 }
 
 func (d *FTP) Drop(ctx context.Context) error {
@@ -65,15 +66,22 @@ func (d *FTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*m
 		return nil, err
 	}
 
-	r := NewFileReader(d.conn, encode(file.GetPath(), d.Encoding), file.GetSize())
-	link := &model.Link{
+	remoteFile := NewFileReader(d.conn, encode(file.GetPath(), d.Encoding), file.GetSize())
+	if remoteFile != nil && !d.Config().OnlyLinkMFile {
+		return &model.Link{
+			RangeReader: &model.FileRangeReader{
+				RangeReaderIF: stream.RateLimitRangeReaderFunc(stream.GetRangeReaderFromMFile(file.GetSize(), remoteFile)),
+			},
+			SyncClosers: utils.NewSyncClosers(remoteFile),
+		}, nil
+	}
+	return &model.Link{
 		MFile: &stream.RateLimitFile{
-			File:    r,
+			File:    remoteFile,
 			Limiter: stream.ServerDownloadLimit,
 			Ctx:     ctx,
 		},
-	}
-	return link, nil
+	}, nil
 }
 
 func (d *FTP) MakeDir(ctx context.Context, parentDir model.Obj, dirName string) error {

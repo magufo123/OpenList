@@ -110,8 +110,7 @@ const InMemoryBufMaxSizeBytes = InMemoryBufMaxSize * 1024 * 1024
 // RangeRead have to cache all data first since only Reader is provided.
 // also support a peeking RangeRead at very start, but won't buffer more than 10MB data in memory
 func (f *FileStream) RangeRead(httpRange http_range.Range) (io.Reader, error) {
-	if httpRange.Length == -1 {
-		// 参考 internal/net/request.go
+	if httpRange.Length < 0 || httpRange.Start+httpRange.Length > f.GetSize() {
 		httpRange.Length = f.GetSize() - httpRange.Start
 	}
 	var cache io.ReaderAt = f.GetFile()
@@ -159,47 +158,40 @@ var _ model.FileStreamer = (*FileStream)(nil)
 // additional resources that need to be closed, they should be added to the Closer property of
 // the SeekableStream object and be closed together when the SeekableStream object is closed.
 type SeekableStream struct {
-	FileStream
+	*FileStream
 	// should have one of belows to support rangeRead
 	rangeReadCloser model.RangeReadCloserIF
 }
 
-func NewSeekableStream(fs FileStream, link *model.Link) (*SeekableStream, error) {
+func NewSeekableStream(fs *FileStream, link *model.Link) (*SeekableStream, error) {
 	if len(fs.Mimetype) == 0 {
 		fs.Mimetype = utils.GetMimeType(fs.Obj.GetName())
 	}
-	ss := &SeekableStream{FileStream: fs}
-	if ss.Reader != nil {
-		ss.TryAdd(ss.Reader)
-		return ss, nil
+
+	if fs.Reader != nil {
+		fs.Add(link)
+		return &SeekableStream{FileStream: fs}, nil
 	}
+
 	if link != nil {
-		if link.MFile != nil {
-			ss.Closers.TryAdd(link.MFile)
-			ss.Reader = link.MFile
-			return ss, nil
+		rr, err := GetRangeReaderFromLink(fs.GetSize(), link)
+		if err != nil {
+			return nil, err
 		}
-		if link.RangeReadCloser != nil {
-			ss.rangeReadCloser = &RateLimitRangeReadCloser{
-				RangeReadCloserIF: link.RangeReadCloser,
-				Limiter:           ServerDownloadLimit,
-			}
-			ss.Add(ss.rangeReadCloser)
-			return ss, nil
-		}
-		if len(link.URL) > 0 {
-			rrc, err := GetRangeReadCloserFromLink(ss.GetSize(), link)
+		if _, ok := rr.(*model.FileRangeReader); ok {
+			fs.Reader, err = rr.RangeRead(fs.Ctx, http_range.Range{Length: -1})
 			if err != nil {
 				return nil, err
 			}
-			rrc = &RateLimitRangeReadCloser{
-				RangeReadCloserIF: rrc,
-				Limiter:           ServerDownloadLimit,
-			}
-			ss.rangeReadCloser = rrc
-			ss.Add(rrc)
-			return ss, nil
+			fs.Add(link)
+			return &SeekableStream{FileStream: fs}, nil
 		}
+		rrc := &model.RangeReadCloser{
+			RangeReader: rr,
+		}
+		fs.Add(link)
+		fs.Add(rrc)
+		return &SeekableStream{FileStream: fs, rangeReadCloser: rrc}, nil
 	}
 	return nil, fmt.Errorf("illegal seekableStream")
 }
@@ -211,9 +203,6 @@ func NewSeekableStream(fs FileStream, link *model.Link) (*SeekableStream, error)
 // RangeRead is not thread-safe, pls use it in single thread only.
 func (ss *SeekableStream) RangeRead(httpRange http_range.Range) (io.Reader, error) {
 	if ss.tmpFile == nil && ss.rangeReadCloser != nil {
-		if httpRange.Length == -1 {
-			httpRange.Length = ss.GetSize() - httpRange.Start
-		}
 		rc, err := ss.rangeReadCloser.RangeRead(ss.Ctx, httpRange)
 		if err != nil {
 			return nil, err
@@ -229,10 +218,6 @@ func (ss *SeekableStream) RangeRead(httpRange http_range.Range) (io.Reader, erro
 
 // only provide Reader as full stream when it's demanded. in rapid-upload, we can skip this to save memory
 func (ss *SeekableStream) Read(p []byte) (n int, err error) {
-	//f.mu.Lock()
-
-	//f.peekedOnce = true
-	//defer f.mu.Unlock()
 	if ss.Reader == nil {
 		if ss.rangeReadCloser == nil {
 			return 0, fmt.Errorf("illegal seekableStream")
@@ -241,7 +226,7 @@ func (ss *SeekableStream) Read(p []byte) (n int, err error) {
 		if err != nil {
 			return 0, nil
 		}
-		ss.Reader = io.NopCloser(rc)
+		ss.Reader = rc
 	}
 	return ss.Reader.Read(p)
 }
@@ -496,7 +481,7 @@ func (r *RangeReadReadAtSeeker) Seek(offset int64, whence int) (int64, error) {
 		return r.masterOff, errors.New("invalid seek: negative position")
 	}
 	if offset > r.ss.GetSize() {
-		return r.masterOff, io.EOF
+		offset = r.ss.GetSize()
 	}
 	r.masterOff = offset
 	return offset, nil

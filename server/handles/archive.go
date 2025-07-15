@@ -321,7 +321,7 @@ func ArchiveDown(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-		down(c, link)
+		redirect(c, link)
 	}
 }
 
@@ -351,7 +351,7 @@ func ArchiveProxy(c *gin.Context) {
 			common.ErrorResp(c, err, 500)
 			return
 		}
-		localProxy(c, link, file, storage.GetStorage().ProxyRange)
+		proxy(c, link, file, storage.GetStorage().ProxyRange)
 	} else {
 		common.ErrorStrResp(c, "proxy not allowed", 403)
 		return

@@ -73,6 +73,8 @@ type call[T any] struct {
 type Group[T any] struct {
 	mu sync.Mutex          // protects m
 	m  map[string]*call[T] // lazily initialized
+
+	Remember bool
 }
 
 // Result holds the results of Do, so they can be passed
@@ -156,7 +158,7 @@ func (g *Group[T]) doCall(c *call[T], key string, fn func() (T, error)) {
 		g.mu.Lock()
 		defer g.mu.Unlock()
 		c.wg.Done()
-		if g.m[key] == c {
+		if !g.Remember && g.m[key] == c {
 			delete(g.m, key)
 		}
 

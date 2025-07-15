@@ -142,19 +142,19 @@ func (r *RateLimitFile) Close() error {
 	return nil
 }
 
-type RateLimitRangeReadCloser struct {
-	model.RangeReadCloserIF
-	Limiter Limiter
-}
+type RateLimitRangeReaderFunc RangeReaderFunc
 
-func (rrc *RateLimitRangeReadCloser) RangeRead(ctx context.Context, httpRange http_range.Range) (io.ReadCloser, error) {
-	rc, err := rrc.RangeReadCloserIF.RangeRead(ctx, httpRange)
+func (f RateLimitRangeReaderFunc) RangeRead(ctx context.Context, httpRange http_range.Range) (io.ReadCloser, error) {
+	rc, err := f(ctx, httpRange)
 	if err != nil {
 		return nil, err
 	}
-	return &RateLimitReader{
-		Reader:  rc,
-		Limiter: rrc.Limiter,
-		Ctx:     ctx,
-	}, nil
+	if ServerDownloadLimit != nil {
+		rc = &RateLimitReader{
+			Ctx:     ctx,
+			Reader:  rc,
+			Limiter: ServerDownloadLimit,
+		}
+	}
+	return rc, nil
 }

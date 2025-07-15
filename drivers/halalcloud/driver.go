@@ -14,6 +14,7 @@ import (
 	"github.com/OpenListTeam/OpenList/v4/internal/driver"
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
 	"github.com/OpenListTeam/OpenList/v4/internal/op"
+	"github.com/OpenListTeam/OpenList/v4/internal/stream"
 	"github.com/OpenListTeam/OpenList/v4/pkg/http_range"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -253,8 +254,8 @@ func (d *HalalCloud) getLink(ctx context.Context, file model.Obj, args model.Lin
 	chunks := getChunkSizes(result.Sizes)
 	resultRangeReader := func(ctx context.Context, httpRange http_range.Range) (io.ReadCloser, error) {
 		length := httpRange.Length
-		if httpRange.Length >= 0 && httpRange.Start+httpRange.Length >= size {
-			length = -1
+		if httpRange.Length < 0 || httpRange.Start+httpRange.Length >= size {
+			length = size - httpRange.Start
 		}
 		oo := &openObject{
 			ctx:     ctx,
@@ -276,10 +277,9 @@ func (d *HalalCloud) getLink(ctx context.Context, file model.Obj, args model.Lin
 		duration = time.Until(time.Now().Add(time.Hour))
 	}
 
-	resultRangeReadCloser := &model.RangeReadCloser{RangeReader: resultRangeReader}
 	return &model.Link{
-		RangeReadCloser: resultRangeReadCloser,
-		Expiration:      &duration,
+		RangeReader: stream.RateLimitRangeReaderFunc(resultRangeReader),
+		Expiration:  &duration,
 	}, nil
 }
 
