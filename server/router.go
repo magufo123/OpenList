@@ -16,7 +16,6 @@ import (
 )
 
 func Init(e *gin.Engine) {
-	e.ContextWithFallback = true
 	if !utils.SliceContains([]string{"", "/"}, conf.URL.Path) {
 		e.GET("/", func(c *gin.Context) {
 			c.Redirect(302, conf.URL.Path)
@@ -141,6 +140,7 @@ func admin(g *gin.RouterGroup) {
 	setting.GET("/list", handles.ListSettings)
 	setting.POST("/save", handles.SaveSettings)
 	setting.POST("/delete", handles.DeleteSetting)
+	setting.POST("/default", handles.DefaultSettings)
 	setting.POST("/reset_token", handles.ResetToken)
 	setting.POST("/set_aria2", handles.SetAria2)
 	setting.POST("/set_qbit", handles.SetQbittorrent)

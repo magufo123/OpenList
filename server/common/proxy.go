@@ -9,7 +9,6 @@ import (
 
 	"maps"
 
-	"github.com/OpenListTeam/OpenList/v4/internal/conf"
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
 	"github.com/OpenListTeam/OpenList/v4/internal/net"
 	"github.com/OpenListTeam/OpenList/v4/internal/stream"
@@ -74,7 +73,7 @@ func attachHeader(w http.ResponseWriter, file model.Obj, header http.Header) {
 func GetEtag(file model.Obj) string {
 	hash := ""
 	for _, v := range file.GetHash().Export() {
-		if strings.Compare(v, hash) > 0 {
+		if v > hash {
 			hash = v
 		}
 	}
