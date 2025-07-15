@@ -63,6 +63,9 @@ const (
 	// 115
 	Pan115TempDir = "115_temp_dir"
 
+	// 115_open
+	Pan115OpenTempDir = "115_open_temp_dir"
+
 	// pikpak
 	PikPakTempDir = "pikpak_temp_dir"
 

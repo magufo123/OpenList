@@ -2,6 +2,7 @@ package tool
 
 import (
 	"context"
+	_115_open "github.com/OpenListTeam/OpenList/v4/drivers/115_open"
 
 	"net/url"
 	stdpath "path"
@@ -93,6 +94,12 @@ func AddURL(ctx context.Context, args *AddURLArgs) (task.TaskExtensionInfo, erro
 			tempDir = args.DstDirPath
 		} else {
 			tempDir = filepath.Join(setting.GetStr(conf.Pan115TempDir), uid)
+		}
+	case "115 Open":
+		if _, ok := storage.(*_115_open.Open115); ok {
+			tempDir = args.DstDirPath
+		} else {
+			tempDir = filepath.Join(setting.GetStr(conf.Pan115OpenTempDir), uid)
 		}
 	case "PikPak":
 		if _, ok := storage.(*pikpak.PikPak); ok {

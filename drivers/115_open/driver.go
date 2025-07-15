@@ -306,6 +306,22 @@ func (d *Open115) Put(ctx context.Context, dstDir model.Obj, file model.FileStre
 	return nil
 }
 
+func (d *Open115) OfflineDownload(ctx context.Context, uris []string, dstDir model.Obj) ([]string, error) {
+	return d.client.AddOfflineTaskURIs(ctx, uris, dstDir.GetID())
+}
+
+func (d *Open115) DeleteOfflineTask(ctx context.Context, infoHash string, deleteFiles bool) error {
+	return d.client.DeleteOfflineTask(ctx, infoHash, deleteFiles)
+}
+
+func (d *Open115) OfflineList(ctx context.Context) (*sdk.OfflineTaskListResp, error) {
+	resp, err := d.client.OfflineTaskList(ctx, 1)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 // func (d *Open115) GetArchiveMeta(ctx context.Context, obj model.Obj, args model.ArchiveArgs) (model.ArchiveMeta, error) {
 // 	// TODO get archive file meta-info, return errs.NotImplement to use an internal archive tool, optional
 // 	return nil, errs.NotImplement
