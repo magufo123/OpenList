@@ -6,6 +6,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/OpenListTeam/OpenList/v4/internal/model"
 	"github.com/OpenListTeam/OpenList/v4/internal/stream"
 	"github.com/OpenListTeam/OpenList/v4/server/middlewares"
 
@@ -47,7 +48,21 @@ func ServeWebDAV(c *gin.Context) {
 }
 
 func WebDAVAuth(c *gin.Context) {
+	// check count of login
+	ip := c.ClientIP()
 	guest, _ := op.GetGuest()
+	count, cok := model.LoginCache.Get(ip)
+	if cok && count >= model.DefaultMaxAuthRetries {
+		if c.Request.Method == "OPTIONS" {
+			c.Set("user", guest)
+			c.Next()
+			return
+		}
+		c.Status(http.StatusTooManyRequests)
+		c.Abort()
+		model.LoginCache.Expire(ip, model.DefaultLockDuration)
+		return
+	}
 	username, password, ok := c.Request.BasicAuth()
 	if !ok {
 		bt := c.GetHeader("Authorization")
@@ -85,10 +100,13 @@ func WebDAVAuth(c *gin.Context) {
 			c.Next()
 			return
 		}
+		model.LoginCache.Set(ip, count+1)
 		c.Status(http.StatusUnauthorized)
 		c.Abort()
 		return
 	}
+	// at least auth is successful till here
+	model.LoginCache.Del(ip)
 	if user.Disabled || !user.CanWebdavRead() {
 		if c.Request.Method == "OPTIONS" {
 			c.Set("user", guest)

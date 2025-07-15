@@ -4,20 +4,12 @@ import (
 	"bytes"
 	"encoding/base64"
 	"image/png"
-	"time"
 
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
 	"github.com/OpenListTeam/OpenList/v4/internal/op"
 	"github.com/OpenListTeam/OpenList/v4/server/common"
-	"github.com/OpenListTeam/go-cache"
 	"github.com/gin-gonic/gin"
 	"github.com/pquerna/otp/totp"
-)
-
-var loginCache = cache.NewMemCache[int]()
-var (
-	defaultDuration = time.Minute * 5
-	defaultTimes    = 5
 )
 
 type LoginReq struct {
@@ -50,30 +42,30 @@ func LoginHash(c *gin.Context) {
 func loginHash(c *gin.Context, req *LoginReq) {
 	// check count of login
 	ip := c.ClientIP()
-	count, ok := loginCache.Get(ip)
-	if ok && count >= defaultTimes {
+	count, ok := model.LoginCache.Get(ip)
+	if ok && count >= model.DefaultMaxAuthRetries {
 		common.ErrorStrResp(c, "登录失败的次数过多，请稍后重试", 429)
-		loginCache.Expire(ip, defaultDuration)
+		model.LoginCache.Expire(ip, model.DefaultLockDuration)
 		return
 	}
 	// check username
 	user, err := op.GetUserByName(req.Username)
 	if err != nil {
 		common.ErrorStrResp(c, "用户名错误", 400)
-		loginCache.Set(ip, count+1)
+		model.LoginCache.Set(ip, count+1)
 		return
 	}
 	// validate password hash
 	if err := user.ValidatePwdStaticHash(req.Password); err != nil {
 		common.ErrorStrResp(c, "密码错误", 400)
-		loginCache.Set(ip, count+1)
+		model.LoginCache.Set(ip, count+1)
 		return
 	}
 	// check 2FA
 	if user.OtpSecret != "" {
 		if !totp.Validate(req.OtpCode, user.OtpSecret) {
 			common.ErrorStrResp(c, "无效的 2FA 代码", 402)
-			loginCache.Set(ip, count+1)
+			model.LoginCache.Set(ip, count+1)
 			return
 		}
 	}
@@ -84,7 +76,7 @@ func loginHash(c *gin.Context, req *LoginReq) {
 		return
 	}
 	common.SuccessResp(c, gin.H{"token": token})
-	loginCache.Del(ip)
+	model.LoginCache.Del(ip)
 }
 
 type UserResp struct {
