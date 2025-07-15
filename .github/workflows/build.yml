@@ -15,7 +15,6 @@ jobs:
   build:
     strategy:
       matrix:
-        platform: [ubuntu-latest]
         target:
           - darwin-amd64
           - darwin-arm64
@@ -24,8 +23,8 @@ jobs:
           - linux-amd64-musl
           - windows-arm64
           - android-arm64
-    name: Build
-    runs-on: ${{ matrix.platform }}
+    name: Build ${{ matrix.target }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4

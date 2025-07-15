@@ -1,4 +1,4 @@
-name: Automatic changelog
+name: Release Automatic changelog
 
 on:
   push:

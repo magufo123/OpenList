@@ -33,9 +33,6 @@ env:
   ARTIFACT_NAME_LITE: 'binaries_docker_release_lite'
   RELEASE_PLATFORMS: 'linux/amd64,linux/arm64,linux/arm/v7,linux/386,linux/arm/v6,linux/s390x,linux/ppc64le,linux/riscv64'
   IMAGE_PUSH: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
-  IMAGE_IS_PROD: ${{ github.ref_type == 'tag' || github.event.inputs.as_latest == 'true' }}
-  IMAGE_TAGS_BETA: |
-    type=raw,value=beta,enable={{is_default_branch}}
 
 permissions:
   packages: write
@@ -65,14 +62,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build go binary (beta)
-        if: env.IMAGE_IS_PROD != 'true'
-        run: bash build.sh beta docker-multiplatform
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build go binary (release)
-        if: env.IMAGE_IS_PROD == 'true'
         run: bash build.sh release docker-multiplatform
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,7 +78,7 @@ jobs:
             !build/musl-libs/**
 
   build_binary_lite:
-    name: Build Binaries for Docker Release
+    name: Build Binaries for Docker Release (Lite)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -111,14 +101,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build go binary (beta)
-        if: env.IMAGE_IS_PROD != 'true'
-        run: bash build.sh beta lite docker-multiplatform
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build go binary (release)
-        if: env.IMAGE_IS_PROD == 'true'
         run: bash build.sh release lite docker-multiplatform
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -181,7 +164,7 @@ jobs:
         if: env.IMAGE_PUSH == 'true'
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKERHUB_ORG_NAME }}
+          username: ${{ vars.DOCKERHUB_ORG_NAME_BACKUP || env.DOCKERHUB_ORG_NAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker meta
@@ -192,13 +175,11 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.GHCR_ORG_NAME }}/${{ env.IMAGE_NAME }}
             ${{ env.DOCKERHUB_ORG_NAME }}/${{ env.IMAGE_NAME_DOCKERHUB }}
           tags: >
-            ${{ env.IMAGE_IS_PROD == 'true' && (
-              github.event_name == 'workflow_dispatch'
+            ${{ github.event_name == 'workflow_dispatch'
                 && format('type=raw,value={0}', github.event.inputs.manual_tag)
-              || format('type=raw,value={0}', github.ref_name)
-            ) || env.IMAGE_TAGS_BETA }}
+              || format('type=raw,value={0}', github.ref_name) }}
           flavor: |
-            latest=${{ env.IMAGE_IS_PROD }}
+            latest=${{ github.event_name == 'push' || github.event.inputs.as_latest == 'true' }}
             ${{ matrix.tag_favor }}
 
       - name: Build and push
@@ -215,7 +196,7 @@ jobs:
 
   release_docker_lite:
     needs: build_binary_lite
-    name: Release Docker image
+    name: Release Docker image (Lite)
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -261,7 +242,7 @@ jobs:
         if: env.IMAGE_PUSH == 'true'
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKERHUB_ORG_NAME }}
+          username: ${{ vars.DOCKERHUB_ORG_NAME_BACKUP || env.DOCKERHUB_ORG_NAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker meta
@@ -272,13 +253,11 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.GHCR_ORG_NAME }}/${{ env.IMAGE_NAME }}
             ${{ env.DOCKERHUB_ORG_NAME }}/${{ env.IMAGE_NAME_DOCKERHUB }}
           tags: >
-            ${{ env.IMAGE_IS_PROD == 'true' && (
-              github.event_name == 'workflow_dispatch'
+            ${{ github.event_name == 'workflow_dispatch'
                 && format('type=raw,value={0}', github.event.inputs.manual_tag)
-              || format('type=raw,value={0}', github.ref_name)
-            ) || env.IMAGE_TAGS_BETA }}
+              || format('type=raw,value={0}', github.ref_name) }}
           flavor: |
-            latest=${{ env.IMAGE_IS_PROD }}
+            latest=${{ github.event_name == 'push' || github.event.inputs.as_latest == 'true' }}
             ${{ matrix.tag_favor }}
 
       - name: Build and push
