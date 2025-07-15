@@ -179,7 +179,7 @@ func SaveSettingItem(item *model.SettingItem) (err error) {
 	}
 	// hook
 	if _, err := HandleSettingItemHook(item); err != nil {
-		return return fmt.Errorf("failed to execute hook on %s: %+v", item.Key, err)
+		return fmt.Errorf("failed to execute hook on %s: %+v", item.Key, err)
 	}
 	// update
 	if err = db.SaveSettingItem(item); err != nil {
