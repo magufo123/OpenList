@@ -121,8 +121,8 @@ BuildDev() {
   xgo -targets=windows/amd64,darwin/amd64,darwin/arm64 -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
   mv "$appName"-* dist
   cd dist
-  cp ./"$appName"-windows-amd64.exe ./"$appName"-windows-amd64-upx.exe
-  upx -9 ./"$appName"-windows-amd64-upx.exe
+  # cp ./"$appName"-windows-amd64.exe ./"$appName"-windows-amd64-upx.exe
+  # upx -9 ./"$appName"-windows-amd64-upx.exe
   find . -type f -print0 | xargs -0 md5sum >md5.txt
   cat md5.txt
 }
@@ -188,9 +188,9 @@ BuildRelease() {
   BuildWinArm64 ./build/"$appName"-windows-arm64.exe
   xgo -out "$appName" -ldflags="$ldflags" -tags=jsoniter .
   # why? Because some target platforms seem to have issues with upx compression
-  upx -9 ./"$appName"-linux-amd64
-  cp ./"$appName"-windows-amd64.exe ./"$appName"-windows-amd64-upx.exe
-  upx -9 ./"$appName"-windows-amd64-upx.exe
+  # upx -9 ./"$appName"-linux-amd64
+  # cp ./"$appName"-windows-amd64.exe ./"$appName"-windows-amd64-upx.exe
+  # upx -9 ./"$appName"-windows-amd64-upx.exe
   mv "$appName"-* build
 }
 
