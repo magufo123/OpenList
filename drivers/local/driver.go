@@ -228,10 +228,17 @@ func (d *Local) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			if err != nil {
 				return nil, err
 			}
+			// Get thumbnail file size for Content-Length
+			stat, err := open.Stat()
+			if err != nil {
+				open.Close()
+				return nil, err
+			}
+			link.ContentLength = int64(stat.Size())
 			link.MFile = open
 		} else {
 			link.MFile = bytes.NewReader(buf.Bytes())
-			//link.Header.Set("Content-Length", strconv.Itoa(buf.Len()))
+			link.ContentLength = int64(buf.Len())
 		}
 	} else {
 		open, err := os.Open(fullPath)

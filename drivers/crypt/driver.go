@@ -256,7 +256,11 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		return nil, err
 	}
 
-	rrf, err := stream.GetRangeReaderFromLink(remoteFile.GetSize(), remoteLink)
+	remoteSize := remoteLink.ContentLength
+	if remoteSize <= 0 {
+		remoteSize = remoteFile.GetSize()
+	}
+	rrf, err := stream.GetRangeReaderFromLink(remoteSize, remoteLink)
 	if err != nil {
 		_ = remoteLink.Close()
 		return nil, fmt.Errorf("the remote storage driver need to be enhanced to support encrytion")
@@ -313,7 +317,8 @@ func (d *Crypt) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 			}
 			return readSeeker, nil
 		}),
-		SyncClosers: utils.NewSyncClosers(remoteLink),
+		SyncClosers:   utils.NewSyncClosers(remoteLink),
+		ContentLength: remoteSize,
 	}, nil
 }
 

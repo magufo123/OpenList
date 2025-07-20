@@ -6,10 +6,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"github.com/OpenListTeam/OpenList/v4/internal/model"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/OpenListTeam/OpenList/v4/internal/model"
 
 	"github.com/OpenListTeam/OpenList/v4/drivers/base"
 	"github.com/OpenListTeam/OpenList/v4/internal/op"
@@ -228,9 +229,10 @@ func (d *QuarkUCTV) getTranscodingLink(ctx context.Context, file model.Obj) (*mo
 	}
 
 	return &model.Link{
-		URL:         fileLink.Data.VideoInfo[0].URL,
-		Concurrency: 3,
-		PartSize:    10 * utils.MB,
+		URL:           fileLink.Data.VideoInfo[0].URL,
+		Concurrency:   3,
+		PartSize:      10 * utils.MB,
+		ContentLength: fileLink.Data.VideoInfo[0].Size,
 	}, nil
 }
 

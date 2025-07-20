@@ -119,7 +119,7 @@ func proxy(c *gin.Context, link *model.Link, file model.Obj, proxyRange bool) {
 		}
 	}
 	if proxyRange {
-		common.ProxyRange(c, link, file.GetSize())
+		link = common.ProxyRange(c, link, file.GetSize())
 	}
 	Writer := &common.WrittenResponseWriter{ResponseWriter: c.Writer}
 

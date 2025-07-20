@@ -122,10 +122,11 @@ func (d *Alias) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (
 		var resultLink *model.Link
 		if link != nil {
 			resultLink = &model.Link{
-				URL:         link.URL,
-				Header:      link.Header,
-				RangeReader: link.RangeReader,
-				SyncClosers: utils.NewSyncClosers(link),
+				URL:           link.URL,
+				Header:        link.Header,
+				RangeReader:   link.RangeReader,
+				SyncClosers:   utils.NewSyncClosers(link),
+				ContentLength: link.ContentLength,
 			}
 			if link.MFile != nil {
 				resultLink.RangeReader = &model.FileRangeReader{

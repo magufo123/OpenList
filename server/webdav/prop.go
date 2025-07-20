@@ -476,10 +476,7 @@ func findETag(ctx context.Context, ls LockSystem, name string, fi model.Obj) (st
 			return etag, err
 		}
 	}
-	// The Apache http 2.4 web server by default concatenates the
-	// modification time and size of a file. We replicate the heuristic
-	// with nanosecond granularity.
-	return common.GetEtag(fi), nil
+	return common.GetEtag(fi, fi.GetSize()), nil
 }
 
 func findSupportedLock(ctx context.Context, ls LockSystem, name string, fi model.Obj) (string, error) {

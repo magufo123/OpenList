@@ -161,6 +161,7 @@ type SeekableStream struct {
 	*FileStream
 	// should have one of belows to support rangeRead
 	rangeReadCloser model.RangeReadCloserIF
+	size            int64
 }
 
 func NewSeekableStream(fs *FileStream, link *model.Link) (*SeekableStream, error) {
@@ -174,7 +175,11 @@ func NewSeekableStream(fs *FileStream, link *model.Link) (*SeekableStream, error
 	}
 
 	if link != nil {
-		rr, err := GetRangeReaderFromLink(fs.GetSize(), link)
+		size := link.ContentLength
+		if size <= 0 {
+			size = fs.GetSize()
+		}
+		rr, err := GetRangeReaderFromLink(size, link)
 		if err != nil {
 			return nil, err
 		}
@@ -184,16 +189,23 @@ func NewSeekableStream(fs *FileStream, link *model.Link) (*SeekableStream, error
 				return nil, err
 			}
 			fs.Add(link)
-			return &SeekableStream{FileStream: fs}, nil
+			return &SeekableStream{FileStream: fs, size: size}, nil
 		}
 		rrc := &model.RangeReadCloser{
 			RangeReader: rr,
 		}
 		fs.Add(link)
 		fs.Add(rrc)
-		return &SeekableStream{FileStream: fs, rangeReadCloser: rrc}, nil
+		return &SeekableStream{FileStream: fs, rangeReadCloser: rrc, size: size}, nil
 	}
 	return nil, fmt.Errorf("illegal seekableStream")
+}
+
+func (ss *SeekableStream) GetSize() int64 {
+	if ss.size > 0 {
+		return ss.size
+	}
+	return ss.FileStream.GetSize()
 }
 
 //func (ss *SeekableStream) Peek(length int) {

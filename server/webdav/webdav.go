@@ -233,10 +233,6 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	if err != nil {
 		return http.StatusNotFound, err
 	}
-	if r.Method == http.MethodHead {
-		w.Header().Set("Content-Length", fmt.Sprintf("%d", fi.GetSize()))
-		return http.StatusOK, nil
-	}
 	if fi.IsDir() {
 		return http.StatusMethodNotAllowed, nil
 	}
@@ -250,7 +246,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 		}
 		defer link.Close()
 		if storage.GetStorage().ProxyRange {
-			common.ProxyRange(ctx, link, fi.GetSize())
+			link = common.ProxyRange(ctx, link, fi.GetSize())
 		}
 		err = common.Proxy(w, r, link, fi)
 		if err != nil {

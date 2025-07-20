@@ -258,7 +258,8 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	if file.IsDir() {
 		return nil, nil, errors.WithStack(errs.NotFile)
 	}
-	key := Key(storage, path)
+	
+	key := stdpath.Join(Key(storage, path), args.Type)
 	if link, ok := linkCache.Get(key); ok {
 		return link, file, nil
 	}
@@ -278,6 +279,9 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 
 	if storage.Config().OnlyLinkMFile {
 		link, err := fn()
+		if err != nil {
+			return nil, nil, err
+		}
 		return link, file, err
 	}
 
@@ -295,6 +299,10 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 			link.AcquireReference()
 		}
 	}
+	if err != nil {
+		return nil, nil, err
+	}
+
 	return link, file, err
 }
 
