@@ -41,9 +41,8 @@ func replaceStrings(content string, replacements map[string]string) string {
 	return content
 }
 
-func initIndex() {
+func initIndex(siteConfig SiteConfig) {
 	utils.Log.Debug("Initializing index.html...")
-	siteConfig := getSiteConfig()
 	// dist_dir is empty and cdn is not empty add web_version is empty or beta or dev
 	if conf.Conf.DistDir == "" && conf.Conf.Cdn != "" && (conf.WebVersion == "" || conf.WebVersion == "beta" || conf.WebVersion == "dev") {
 		utils.Log.Infof("Fetching index.html from CDN: %s/index.html...", conf.Conf.Cdn)
@@ -89,6 +88,7 @@ func initIndex() {
 func UpdateIndex() {
 	utils.Log.Debug("Updating index.html with settings...")
 	favicon := setting.GetStr(conf.Favicon)
+	logo := strings.Split(setting.GetStr(conf.Logo), "\n")[0]
 	title := setting.GetStr(conf.SiteTitle)
 	customizeHead := setting.GetStr(conf.CustomizeHead)
 	customizeBody := setting.GetStr(conf.CustomizeBody)
@@ -96,6 +96,7 @@ func UpdateIndex() {
 	utils.Log.Debug("Applying replacements for default pages...")
 	replaceMap1 := map[string]string{
 		"https://live2d.long2024.cn/yunp/applogo.png": favicon,
+		"https://long2024.cn/favicon.ico": logo,
 		"Loading...":            title,
 		"main_color: undefined": fmt.Sprintf("main_color: '%s'", mainColor),
 	}
@@ -111,8 +112,9 @@ func UpdateIndex() {
 
 func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 	utils.Log.Debug("Setting up static routes...")
+	siteConfig := getSiteConfig()
 	initStatic()
-	initIndex()
+	initIndex(siteConfig)
 	folders := []string{"assets", "images", "streamer", "static"}
 	if conf.Conf.Cdn == "" {
 		utils.Log.Debug("Setting up static file serving...")
@@ -136,7 +138,7 @@ func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 		for _, folder := range folders {
 			r.GET(fmt.Sprintf("/%s/*filepath", folder), func(c *gin.Context) {
 				filepath := c.Param("filepath")
-				c.Redirect(http.StatusFound, fmt.Sprintf("%s/%s%s", conf.Conf.Cdn, folder, filepath))
+				c.Redirect(http.StatusFound, fmt.Sprintf("%s/%s%s", siteConfig.Cdn, folder, filepath))
 			})
 		}
 	}

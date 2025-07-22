@@ -17,7 +17,7 @@ const (
 	AllowMounted = "allow_mounted"
 	RobotsTxt    = "robots_txt"
 
-	Logo      = "logo"
+	Logo      = "logo" // multi-lines text, L1: light, EOL: dark
 	Favicon   = "favicon"
 	MainColor = "main_color"
 

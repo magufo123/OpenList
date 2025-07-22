@@ -17,7 +17,7 @@ type filter struct {
 
 var filterList []*filter
 
-	func initFilterList() {
+func initFilterList() {
 	for _, s := range conf.Conf.Log.Filter.Filters {
 		f := new(filter)
 

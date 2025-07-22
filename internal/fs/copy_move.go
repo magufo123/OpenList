@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/OpenListTeam/OpenList/v4/internal/conf"
-	"github.com/OpenListTeam/OpenList/v4/internal/driver"
 	"github.com/OpenListTeam/OpenList/v4/internal/errs"
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
 	"github.com/OpenListTeam/OpenList/v4/internal/op"
@@ -52,17 +51,16 @@ func (t *FileTransferTask) Run() error {
 	t.ClearEndTime()
 	t.SetStartTime(time.Now())
 	defer func() { t.SetEndTime(time.Now()) }()
-	var err error
-	if t.SrcStorage == nil {
-		t.SrcStorage, err = op.GetStorageByMountPath(t.SrcStorageMp)
-	}
-	if t.DstStorage == nil {
-		t.DstStorage, err = op.GetStorageByMountPath(t.DstStorageMp)
-	}
-	if err != nil {
-		return errors.WithMessage(err, "failed get storage")
-	}
-	return putBetween2Storages(t, t.SrcStorage, t.DstStorage, t.SrcActualPath, t.DstActualPath)
+	return t.RunWithNextTaskCallback(func(nextTask *FileTransferTask) error {
+		nextTask.groupID = t.groupID
+		task_group.TransferCoordinator.AddTask(t.groupID, nil)
+		if t.TaskType == copy {
+			CopyTaskManager.Add(nextTask)
+		} else {
+			MoveTaskManager.Add(nextTask)
+		}
+		return nil
+	})
 }
 
 func (t *FileTransferTask) OnSucceeded() {
@@ -109,51 +107,11 @@ func transfer(ctx context.Context, taskType taskType, srcObjPath, dstDirPath str
 				return nil, err
 			}
 		}
-	} else if ctx.Value(conf.NoTaskKey) != nil {
-		return nil, fmt.Errorf("can't %s files between two storages, please use the front-end ", taskType)
 	}
 
-	// if ctx.Value(conf.NoTaskKey) != nil { // webdav
-	// 	srcObj, err := op.Get(ctx, srcStorage, srcObjActualPath)
-	// 	if err != nil {
-	// 		return nil, errors.WithMessagef(err, "failed get src [%s] file", srcObjPath)
-	// 	}
-	// 	if !srcObj.IsDir() {
-	// 		// copy file directly
-	// 		link, _, err := op.Link(ctx, srcStorage, srcObjActualPath, model.LinkArgs{})
-	// 		if err != nil {
-	// 			return nil, errors.WithMessagef(err, "failed get [%s] link", srcObjPath)
-	// 		}
-	// 		// any link provided is seekable
-	// 		ss, err := stream.NewSeekableStream(&stream.FileStream{
-	// 			Obj: srcObj,
-	// 			Ctx: ctx,
-	// 		}, link)
-	// 		if err != nil {
-	// 			_ = link.Close()
-	// 			return nil, errors.WithMessagef(err, "failed get [%s] stream", srcObjPath)
-	// 		}
-	// 		if taskType == move {
-	// 			defer func() {
-	// 				task_group.TransferCoordinator.Done(dstDirPath, err == nil)
-	// 			}()
-	// 			task_group.TransferCoordinator.AddTask(dstDirPath, task_group.SrcPathToRemove(srcObjPath))
-	// 		}
-	// 		err = op.Put(ctx, dstStorage, dstDirActualPath, ss, nil, taskType == move)
-	// 		return nil, err
-	// 	} else {
-	// 		return nil, fmt.Errorf("can't %s dir two storages, please use the front-end ", taskType)
-	// 	}
-	// }
-
 	// not in the same storage
-	taskCreator, _ := ctx.Value(conf.UserKey).(*model.User)
 	t := &FileTransferTask{
 		TaskData: TaskData{
-			TaskExtension: task.TaskExtension{
-				Creator: taskCreator,
-				ApiUrl:  common.GetApiUrl(ctx),
-			},
 			SrcStorage:    srcStorage,
 			DstStorage:    dstStorage,
 			SrcActualPath: srcObjActualPath,
@@ -162,8 +120,34 @@ func transfer(ctx context.Context, taskType taskType, srcObjPath, dstDirPath str
 			DstStorageMp:  dstStorage.GetStorage().MountPath,
 		},
 		TaskType: taskType,
-		groupID:  dstDirPath,
 	}
+
+	if ctx.Value(conf.NoTaskKey) != nil {
+		var callback func(nextTask *FileTransferTask) error
+		hasSuccess := false
+		callback = func(nextTask *FileTransferTask) error {
+			nextTask.Base.SetCtx(ctx)
+			err := nextTask.RunWithNextTaskCallback(callback)
+			if err == nil {
+				hasSuccess = true
+			}
+			return err
+		}
+		t.Base.SetCtx(ctx)
+		err = t.RunWithNextTaskCallback(callback)
+		if hasSuccess || err == nil {
+			if taskType == move {
+				task_group.RefreshAndRemove(dstDirPath, task_group.SrcPathToRemove(srcObjPath))
+			} else {
+				op.DeleteCache(t.DstStorage, dstDirActualPath)
+			}
+		}
+		return nil, err
+	}
+
+	t.Creator, _ = ctx.Value(conf.UserKey).(*model.User)
+	t.ApiUrl = common.GetApiUrl(ctx)
+	t.groupID = dstDirPath
 	if taskType == copy {
 		task_group.TransferCoordinator.AddTask(dstDirPath, nil)
 		CopyTaskManager.Add(t)
@@ -174,76 +158,69 @@ func transfer(ctx context.Context, taskType taskType, srcObjPath, dstDirPath str
 	return t, nil
 }
 
-func putBetween2Storages(t *FileTransferTask, srcStorage, dstStorage driver.Driver, srcActualPath, dstDirActualPath string) error {
+func (t *FileTransferTask) RunWithNextTaskCallback(f func(nextTask *FileTransferTask) error) error {
 	t.Status = "getting src object"
-	srcObj, err := op.Get(t.Ctx(), srcStorage, srcActualPath)
+	srcObj, err := op.Get(t.Ctx(), t.SrcStorage, t.SrcActualPath)
 	if err != nil {
-		return errors.WithMessagef(err, "failed get src [%s] file", srcActualPath)
+		return errors.WithMessagef(err, "failed get src [%s] file", t.SrcActualPath)
 	}
 	if srcObj.IsDir() {
 		t.Status = "src object is dir, listing objs"
-		objs, err := op.List(t.Ctx(), srcStorage, srcActualPath, model.ListArgs{})
+		objs, err := op.List(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.ListArgs{})
 		if err != nil {
-			return errors.WithMessagef(err, "failed list src [%s] objs", srcActualPath)
+			return errors.WithMessagef(err, "failed list src [%s] objs", t.SrcActualPath)
 		}
-		dstActualPath := stdpath.Join(dstDirActualPath, srcObj.GetName())
+		dstActualPath := stdpath.Join(t.DstActualPath, srcObj.GetName())
 		if t.TaskType == copy {
-			task_group.TransferCoordinator.AppendPayload(t.groupID, task_group.DstPathToRefresh(dstActualPath))
+			if t.Ctx().Value(conf.NoTaskKey) != nil {
+				defer op.DeleteCache(t.DstStorage, dstActualPath)
+			} else {
+				task_group.TransferCoordinator.AppendPayload(t.groupID, task_group.DstPathToRefresh(dstActualPath))
+			}
 		}
 		for _, obj := range objs {
 			if utils.IsCanceled(t.Ctx()) {
 				return nil
 			}
-			task := &FileTransferTask{
+			err = f(&FileTransferTask{
 				TaskType: t.TaskType,
 				TaskData: TaskData{
 					TaskExtension: task.TaskExtension{
-						Creator: t.GetCreator(),
+						Creator: t.Creator,
 						ApiUrl:  t.ApiUrl,
 					},
-					SrcStorage:    srcStorage,
-					DstStorage:    dstStorage,
-					SrcActualPath: stdpath.Join(srcActualPath, obj.GetName()),
+					SrcStorage:    t.SrcStorage,
+					DstStorage:    t.DstStorage,
+					SrcActualPath: stdpath.Join(t.SrcActualPath, obj.GetName()),
 					DstActualPath: dstActualPath,
-					SrcStorageMp:  srcStorage.GetStorage().MountPath,
-					DstStorageMp:  dstStorage.GetStorage().MountPath,
+					SrcStorageMp:  t.SrcStorageMp,
+					DstStorageMp:  t.DstStorageMp,
 				},
-				groupID: t.groupID,
-			}
-			task_group.TransferCoordinator.AddTask(t.groupID, nil)
-			if t.TaskType == copy {
-				CopyTaskManager.Add(task)
-			} else {
-				MoveTaskManager.Add(task)
+			})
+			if err != nil {
+				return err
 			}
 		}
 		t.Status = fmt.Sprintf("src object is dir, added all %s tasks of objs", t.TaskType)
 		return nil
 	}
-	return putFileBetween2Storages(t, srcStorage, dstStorage, srcActualPath, dstDirActualPath)
-}
 
-func putFileBetween2Storages(tsk *FileTransferTask, srcStorage, dstStorage driver.Driver, srcActualPath, dstDirActualPath string) error {
-	srcFile, err := op.Get(tsk.Ctx(), srcStorage, srcActualPath)
+	link, _, err := op.Link(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.LinkArgs{})
 	if err != nil {
-		return errors.WithMessagef(err, "failed get src [%s] file", srcActualPath)
-	}
-	tsk.SetTotalBytes(srcFile.GetSize())
-	link, _, err := op.Link(tsk.Ctx(), srcStorage, srcActualPath, model.LinkArgs{})
-	if err != nil {
-		return errors.WithMessagef(err, "failed get [%s] link", srcActualPath)
+		return errors.WithMessagef(err, "failed get [%s] link", t.SrcActualPath)
 	}
 	// any link provided is seekable
 	ss, err := stream.NewSeekableStream(&stream.FileStream{
-		Obj: srcFile,
-		Ctx: tsk.Ctx(),
+		Obj: srcObj,
+		Ctx: t.Ctx(),
 	}, link)
 	if err != nil {
 		_ = link.Close()
-		return errors.WithMessagef(err, "failed get [%s] stream", srcActualPath)
+		return errors.WithMessagef(err, "failed get [%s] stream", t.SrcActualPath)
 	}
-	tsk.SetTotalBytes(ss.GetSize())
-	return op.Put(tsk.Ctx(), dstStorage, dstDirActualPath, ss, tsk.SetProgress, true)
+	t.SetTotalBytes(ss.GetSize())
+	t.Status = "uploading"
+	return op.Put(t.Ctx(), t.DstStorage, t.DstActualPath, ss, t.SetProgress, true)
 }
 
 var (

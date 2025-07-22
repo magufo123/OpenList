@@ -17,7 +17,7 @@ type SrcPathToRemove string
 // ActualPath
 type DstPathToRefresh string
 
-func refreshAndRemove(dstPath string, payloads []any) {
+func RefreshAndRemove(dstPath string, payloads ...any) {
 	dstStorage, dstActualPath, err := op.GetStorageAndActualPath(dstPath)
 	if err != nil {
 		log.Error(errors.WithMessage(err, "failed get dst storage"))
@@ -100,4 +100,4 @@ func verifyAndRemove(ctx context.Context, srcStorage, dstStorage driver.Driver, 
 	return nil
 }
 
-var TransferCoordinator *TaskGroupCoordinator = NewTaskGroupCoordinator("RefreshAndRemove", refreshAndRemove)
+var TransferCoordinator *TaskGroupCoordinator = NewTaskGroupCoordinator("RefreshAndRemove", RefreshAndRemove)

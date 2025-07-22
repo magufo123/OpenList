@@ -55,13 +55,6 @@ func (t *ArchiveDownloadTask) Run() error {
 }
 
 func (t *ArchiveDownloadTask) RunWithoutPushUploadTask() (*ArchiveContentUploadTask, error) {
-	var err error
-	if t.SrcStorage == nil {
-		t.SrcStorage, err = op.GetStorageByMountPath(t.SrcStorageMp)
-		if err != nil {
-			return nil, err
-		}
-	}
 	srcObj, tool, ss, err := op.GetArchiveToolAndStream(t.Ctx(), t.SrcStorage, t.SrcActualPath, model.LinkArgs{})
 	if err != nil {
 		return nil, err
@@ -111,7 +104,7 @@ func (t *ArchiveDownloadTask) RunWithoutPushUploadTask() (*ArchiveContentUploadT
 	baseName := strings.TrimSuffix(srcObj.GetName(), stdpath.Ext(srcObj.GetName()))
 	uploadTask := &ArchiveContentUploadTask{
 		TaskExtension: task.TaskExtension{
-			Creator: t.GetCreator(),
+			Creator: t.Creator,
 			ApiUrl:  t.ApiUrl,
 		},
 		ObjName:       baseName,
@@ -179,13 +172,6 @@ func (t *ArchiveContentUploadTask) SetRetry(retry int, maxRetry int) {
 }
 
 func (t *ArchiveContentUploadTask) RunWithNextTaskCallback(f func(nextTask *ArchiveContentUploadTask) error) error {
-	var err error
-	if t.dstStorage == nil {
-		t.dstStorage, err = op.GetStorageByMountPath(t.DstStorageMp)
-		if err != nil {
-			return err
-		}
-	}
 	info, err := os.Stat(t.FilePath)
 	if err != nil {
 		return err
@@ -224,7 +210,7 @@ func (t *ArchiveContentUploadTask) RunWithNextTaskCallback(f func(nextTask *Arch
 			}
 			err = f(&ArchiveContentUploadTask{
 				TaskExtension: task.TaskExtension{
-					Creator: t.GetCreator(),
+					Creator: t.Creator,
 					ApiUrl:  t.ApiUrl,
 				},
 				ObjName:       entry.Name(),
@@ -243,11 +229,11 @@ func (t *ArchiveContentUploadTask) RunWithNextTaskCallback(f func(nextTask *Arch
 			return es
 		}
 	} else {
-		t.SetTotalBytes(info.Size())
 		file, err := os.Open(t.FilePath)
 		if err != nil {
 			return err
 		}
+		t.SetTotalBytes(info.Size())
 		fs := &stream.FileStream{
 			Obj: &model.Object{
 				Name:     t.ObjName,
@@ -379,13 +365,8 @@ func archiveDecompress(ctx context.Context, srcObjPath, dstDirPath string, args 
 			return nil, err
 		}
 	}
-	taskCreator, _ := ctx.Value(conf.UserKey).(*model.User)
 	tsk := &ArchiveDownloadTask{
 		TaskData: TaskData{
-			TaskExtension: task.TaskExtension{
-				Creator: taskCreator,
-				ApiUrl:  common.GetApiUrl(ctx),
-			},
 			SrcStorage:    srcStorage,
 			DstStorage:    dstStorage,
 			SrcActualPath: srcObjActualPath,
@@ -396,6 +377,7 @@ func archiveDecompress(ctx context.Context, srcObjPath, dstDirPath string, args 
 		ArchiveDecompressArgs: args,
 	}
 	if ctx.Value(conf.NoTaskKey) != nil {
+		tsk.Base.SetCtx(ctx)
 		uploadTask, err := tsk.RunWithoutPushUploadTask()
 		if err != nil {
 			return nil, errors.WithMessagef(err, "failed download [%s]", srcObjPath)
@@ -403,12 +385,16 @@ func archiveDecompress(ctx context.Context, srcObjPath, dstDirPath string, args 
 		defer uploadTask.deleteSrcFile()
 		var callback func(t *ArchiveContentUploadTask) error
 		callback = func(t *ArchiveContentUploadTask) error {
+			t.Base.SetCtx(ctx)
 			e := t.RunWithNextTaskCallback(callback)
 			t.deleteSrcFile()
 			return e
 		}
+		uploadTask.Base.SetCtx(ctx)
 		return nil, uploadTask.RunWithNextTaskCallback(callback)
 	} else {
+		tsk.Creator, _ = ctx.Value(conf.UserKey).(*model.User)
+		tsk.ApiUrl = common.GetApiUrl(ctx)
 		ArchiveDownloadTaskManager.Add(tsk)
 		return tsk, nil
 	}
