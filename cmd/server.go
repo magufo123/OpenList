@@ -19,6 +19,7 @@ import (
 	"github.com/OpenListTeam/OpenList/v4/internal/fs"
 	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
 	"github.com/OpenListTeam/OpenList/v4/server"
+	"github.com/OpenListTeam/OpenList/v4/server/middlewares"
 	"github.com/OpenListTeam/sftpd-openlist"
 	ftpserver "github.com/fclairamb/ftpserverlib"
 	"github.com/gin-gonic/gin"
@@ -47,7 +48,7 @@ the address is defined in config file`,
 			gin.SetMode(gin.ReleaseMode)
 		}
 		r := gin.New()
-		r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
+		r.Use(middlewares.ConfigurableFilteredLogger(), gin.RecoveryWithWriter(log.StandardLogger().Out))
 		server.Init(r)
 		var httpHandler http.Handler = r
 		if conf.Conf.Scheme.EnableH2c {
@@ -102,7 +103,7 @@ the address is defined in config file`,
 		}
 		if conf.Conf.S3.Port != -1 && conf.Conf.S3.Enable {
 			s3r := gin.New()
-			s3r.Use(gin.LoggerWithWriter(log.StandardLogger().Out), gin.RecoveryWithWriter(log.StandardLogger().Out))
+			s3r.Use(middlewares.FilteredLogger(), gin.RecoveryWithWriter(log.StandardLogger().Out))
 			server.InitS3(s3r)
 			s3Base := fmt.Sprintf("%s:%d", conf.Conf.Scheme.Address, conf.Conf.S3.Port)
 			utils.Log.Infof("start S3 server @ %s", s3Base)
