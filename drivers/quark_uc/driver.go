@@ -39,7 +39,7 @@ func (d *QuarkOrUC) Init(ctx context.Context) error {
 	if err == nil {
 		if d.AdditionVersion != 2 {
 			d.AdditionVersion = 2
-			if !d.UseTransCodingAddress && len(d.DownProxyUrl) == 0 {
+			if !d.UseTransCodingAddress && len(d.DownProxyURL) == 0 {
 				d.WebProxy = true
 				d.WebdavPolicy = "native_proxy"
 			}

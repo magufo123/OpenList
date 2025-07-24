@@ -95,9 +95,6 @@ func (d *CloudreveV4) login() error {
 	if err != nil {
 		return err
 	}
-	if !siteConfig.Authn {
-		return errors.New("authn not support")
-	}
 	var prepareLogin PrepareLoginResp
 	err = d.request(http.MethodGet, "/session/prepare?email="+d.Addition.Username, nil, &prepareLogin)
 	if err != nil {

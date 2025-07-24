@@ -151,7 +151,7 @@ func (d *QuarkOrUC) getTranscodingLink(file model.Obj) (*model.Link, error) {
 
 	return &model.Link{
 		URL:           resp.Data.VideoList[0].VideoInfo.URL,
-		ContentLength: resp.Data.Size,
+		ContentLength: resp.Data.VideoList[0].VideoInfo.Size,
 		Concurrency:   3,
 		PartSize:      10 * utils.MB,
 	}, nil

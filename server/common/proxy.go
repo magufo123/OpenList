@@ -12,6 +12,7 @@ import (
 	"github.com/OpenListTeam/OpenList/v4/internal/conf"
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
 	"github.com/OpenListTeam/OpenList/v4/internal/net"
+	"github.com/OpenListTeam/OpenList/v4/internal/sign"
 	"github.com/OpenListTeam/OpenList/v4/internal/stream"
 	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
 )
@@ -139,4 +140,19 @@ func (ww *WrittenResponseWriter) Write(p []byte) (int, error) {
 
 func (ww *WrittenResponseWriter) IsWritten() bool {
 	return ww.written
+}
+
+func GenerateDownProxyURL(storage *model.Storage, reqPath string) string {
+	if storage.DownProxyURL == "" {
+		return ""
+	}
+	query := ""
+	if !storage.DisableProxySign {
+		query = "?sign=" + sign.Sign(reqPath)
+	}
+	return fmt.Sprintf("%s%s%s",
+		strings.Split(storage.DownProxyURL, "\n")[0],
+		utils.EncodePath(reqPath, true),
+		query,
+	)
 }
