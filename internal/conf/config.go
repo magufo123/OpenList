@@ -3,7 +3,6 @@ package conf
 import (
 	"path/filepath"
 
-	"github.com/OpenListTeam/OpenList/v4/cmd/flags"
 	"github.com/OpenListTeam/OpenList/v4/pkg/utils/random"
 )
 
@@ -118,11 +117,11 @@ type Config struct {
 	LastLaunchedVersion   string      `json:"last_launched_version"`
 }
 
-func DefaultConfig() *Config {
-	tempDir := filepath.Join(flags.DataDir, "temp")
-	indexDir := filepath.Join(flags.DataDir, "bleve")
-	logPath := filepath.Join(flags.DataDir, "log/log.log")
-	dbPath := filepath.Join(flags.DataDir, "data.db")
+func DefaultConfig(dataDir string) *Config {
+	tempDir := filepath.Join(dataDir, "temp")
+	indexDir := filepath.Join(dataDir, "bleve")
+	logPath := filepath.Join(dataDir, "log/log.log")
+	dbPath := filepath.Join(dataDir, "data.db")
 	return &Config{
 		Scheme: Scheme{
 			Address:    "0.0.0.0",

@@ -61,7 +61,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - target: "!(*musl*|*windows-arm64*|*android*|*freebsd*)" # xgo
+          - target: "!(*musl*|*windows-arm64*|*android*|*freebsd*)" # xgo and loongarch
             hash: "md5"
           - target: "linux-!(arm*)-musl*" #musl-not-arm
             hash: "md5-linux-musl"
@@ -85,7 +85,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.24.3"
 
       - name: Setup web
         run: bash build.sh dev web
@@ -93,10 +93,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Build
-        uses: OpenListTeam/cgo-actions@v1.1.2
+        uses: OpenListTeam/cgo-actions@v1.2.1
         with:
           targets: ${{ matrix.target }}
           musl-target-format: $os-$musl-$arch
+          github-token: ${{ secrets.MY_GITHUB_TOKEN }}
           out-dir: build
           output: openlist-$target$ext
           musl-base-url: "https://github.com/OpenListTeam/musl-compilers/releases/latest/download/"

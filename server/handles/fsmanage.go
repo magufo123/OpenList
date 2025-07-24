@@ -204,6 +204,9 @@ func FsRename(c *gin.Context) {
 		return
 	}
 	reqPath, err := user.JoinPath(req.Path)
+	if err == nil {
+		req.Name, err = utils.CheckRelativePath(req.Name)
+	}
 	if err != nil {
 		common.ErrorResp(c, err, 403)
 		return

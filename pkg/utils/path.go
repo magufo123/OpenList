@@ -75,20 +75,20 @@ func EncodePath(path string, all ...bool) string {
 }
 
 func JoinBasePath(basePath, reqPath string) (string, error) {
-	/** relative path:
-	 * 1. ..
-	 * 2. ../
-	 * 3. /..
-	 * 4. /../
-	 * 5. /a/b/..
-	 */
-	if reqPath == ".." ||
-		strings.HasSuffix(reqPath, "/..") ||
-		strings.HasPrefix(reqPath, "../") ||
-		strings.Contains(reqPath, "/../") {
+	reqPath, err := CheckRelativePath(reqPath)
+	if err != nil {
+		return "", err
+	}
+	return stdpath.Join(FixAndCleanPath(basePath), reqPath), nil
+}
+
+func CheckRelativePath(path string) (string, error) {
+	isRelativePath := strings.Contains(path, "..")
+	path = FixAndCleanPath(path)
+	if isRelativePath && !strings.Contains(path, "..") {
 		return "", errs.RelativePath
 	}
-	return stdpath.Join(FixAndCleanPath(basePath), FixAndCleanPath(reqPath)), nil
+	return path, nil
 }
 
 func GetFullPath(mountPath, path string) string {
