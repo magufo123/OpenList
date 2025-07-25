@@ -66,26 +66,18 @@ func MakeDir(ctx context.Context, path string, lazyCache ...bool) error {
 	return err
 }
 
-func Move(ctx context.Context, srcPath, dstDirPath string, lazyCache ...bool) error {
-	err := move(ctx, srcPath, dstDirPath, lazyCache...)
+func Move(ctx context.Context, srcPath, dstDirPath string, lazyCache ...bool) (task.TaskExtensionInfo, error) {
+	req, err := transfer(ctx, move, srcPath, dstDirPath, lazyCache...)
 	if err != nil {
 		log.Errorf("failed move %s to %s: %+v", srcPath, dstDirPath, err)
 	}
-	return err
+	return req, err
 }
 
 func Copy(ctx context.Context, srcObjPath, dstDirPath string, lazyCache ...bool) (task.TaskExtensionInfo, error) {
-	res, err := _copy(ctx, srcObjPath, dstDirPath, lazyCache...)
+	res, err := transfer(ctx, copy, srcObjPath, dstDirPath, lazyCache...)
 	if err != nil {
 		log.Errorf("failed copy %s to %s: %+v", srcObjPath, dstDirPath, err)
-	}
-	return res, err
-}
-
-func MoveWithTaskAndValidation(ctx context.Context, srcPath, dstDirPath string, validateExistence bool, lazyCache ...bool) (task.TaskExtensionInfo, error) {
-	res, err := _moveWithValidation(ctx, srcPath, dstDirPath, validateExistence, lazyCache...)
-	if err != nil {
-		log.Errorf("failed move %s to %s: %+v", srcPath, dstDirPath, err)
 	}
 	return res, err
 }

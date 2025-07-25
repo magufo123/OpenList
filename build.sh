@@ -278,6 +278,7 @@ BuildReleaseFreeBSD() {
   freebsd_version=$(eval "curl -fsSL --max-time 2 $githubAuthArgs \"https://api.github.com/repos/freebsd/freebsd-src/tags\"" | \
     jq -r '.[].name' | \
     grep '^release/14\.' | \
+    grep -v -- '-p[0-9]*$' | \
     sort -V | \
     tail -1 | \
     sed 's/release\///' | \

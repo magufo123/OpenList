@@ -3,6 +3,7 @@ package handles
 import (
 	"fmt"
 	stdpath "path"
+	"strings"
 
 	"github.com/OpenListTeam/OpenList/v4/internal/conf"
 	"github.com/OpenListTeam/OpenList/v4/internal/task"
@@ -101,7 +102,7 @@ func FsMove(c *gin.Context) {
 	// All validation will be done asynchronously in the background
 	var addedTasks []task.TaskExtensionInfo
 	for i, name := range req.Names {
-		t, err := fs.MoveWithTaskAndValidation(c.Request.Context(), stdpath.Join(srcDir, name), dstDir, !req.Overwrite, len(req.Names) > i+1)
+		t, err := fs.Move(c.Request.Context(), stdpath.Join(srcDir, name), dstDir, len(req.Names) > i+1)
 		if t != nil {
 			addedTasks = append(addedTasks, t)
 		}
@@ -205,7 +206,7 @@ func FsRename(c *gin.Context) {
 	}
 	reqPath, err := user.JoinPath(req.Path)
 	if err == nil {
-		req.Name, err = utils.CheckRelativePath(req.Name)
+		err = checkRelativePath(req.Name)
 	}
 	if err != nil {
 		common.ErrorResp(c, err, 403)
@@ -225,6 +226,13 @@ func FsRename(c *gin.Context) {
 		return
 	}
 	common.SuccessResp(c)
+}
+
+func checkRelativePath(path string) error {
+	if strings.ContainsAny(path, "/\\") || path == "" || path == "." || path == ".." {
+		return errs.RelativePath
+	}
+	return nil
 }
 
 type RemoveReq struct {

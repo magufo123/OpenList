@@ -103,6 +103,10 @@ func ClearCache(storage driver.Driver, path string) {
 	listCache.Del(Key(storage, path))
 }
 
+func DeleteCache(storage driver.Driver, path string) {
+	listCache.Del(Key(storage, path))
+}
+
 func Key(storage driver.Driver, path string) string {
 	return stdpath.Join(storage.GetStorage().MountPath, utils.FixAndCleanPath(path))
 }
@@ -258,7 +262,7 @@ func Link(ctx context.Context, storage driver.Driver, path string, args model.Li
 	if file.IsDir() {
 		return nil, nil, errors.WithStack(errs.NotFile)
 	}
-	
+
 	key := stdpath.Join(Key(storage, path), args.Type)
 	if link, ok := linkCache.Get(key); ok {
 		return link, file, nil
@@ -355,13 +359,13 @@ func MakeDir(ctx context.Context, storage driver.Driver, path string, lazyCache 
 						if newObj != nil {
 							addCacheObj(storage, parentPath, model.WrapObjName(newObj))
 						} else if !utils.IsBool(lazyCache...) {
-							ClearCache(storage, parentPath)
+							DeleteCache(storage, parentPath)
 						}
 					}
 				case driver.Mkdir:
 					err = s.MakeDir(ctx, parentDir, dirName)
 					if err == nil && !utils.IsBool(lazyCache...) {
-						ClearCache(storage, parentPath)
+						DeleteCache(storage, parentPath)
 					}
 				default:
 					return nil, errs.NotImplement
@@ -406,7 +410,7 @@ func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string
 			if newObj != nil {
 				addCacheObj(storage, dstDirPath, model.WrapObjName(newObj))
 			} else if !utils.IsBool(lazyCache...) {
-				ClearCache(storage, dstDirPath)
+				DeleteCache(storage, dstDirPath)
 			}
 		}
 	case driver.Move:
@@ -414,7 +418,7 @@ func Move(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string
 		if err == nil {
 			delCacheObj(storage, srcDirPath, srcRawObj)
 			if !utils.IsBool(lazyCache...) {
-				ClearCache(storage, dstDirPath)
+				DeleteCache(storage, dstDirPath)
 			}
 		}
 	default:
@@ -443,13 +447,13 @@ func Rename(ctx context.Context, storage driver.Driver, srcPath, dstName string,
 			if newObj != nil {
 				updateCacheObj(storage, srcDirPath, srcRawObj, model.WrapObjName(newObj))
 			} else if !utils.IsBool(lazyCache...) {
-				ClearCache(storage, srcDirPath)
+				DeleteCache(storage, srcDirPath)
 			}
 		}
 	case driver.Rename:
 		err = s.Rename(ctx, srcObj, dstName)
 		if err == nil && !utils.IsBool(lazyCache...) {
-			ClearCache(storage, srcDirPath)
+			DeleteCache(storage, srcDirPath)
 		}
 	default:
 		return errs.NotImplement
@@ -481,13 +485,13 @@ func Copy(ctx context.Context, storage driver.Driver, srcPath, dstDirPath string
 			if newObj != nil {
 				addCacheObj(storage, dstDirPath, model.WrapObjName(newObj))
 			} else if !utils.IsBool(lazyCache...) {
-				ClearCache(storage, dstDirPath)
+				DeleteCache(storage, dstDirPath)
 			}
 		}
 	case driver.Copy:
 		err = s.Copy(ctx, srcObj, dstDir)
 		if err == nil && !utils.IsBool(lazyCache...) {
-			ClearCache(storage, dstDirPath)
+			DeleteCache(storage, dstDirPath)
 		}
 	default:
 		return errs.NotImplement
@@ -590,13 +594,13 @@ func Put(ctx context.Context, storage driver.Driver, dstDirPath string, file mod
 			if newObj != nil {
 				addCacheObj(storage, dstDirPath, model.WrapObjName(newObj))
 			} else if !utils.IsBool(lazyCache...) {
-				ClearCache(storage, dstDirPath)
+				DeleteCache(storage, dstDirPath)
 			}
 		}
 	case driver.Put:
 		err = s.Put(ctx, parentDir, file, up)
 		if err == nil && !utils.IsBool(lazyCache...) {
-			ClearCache(storage, dstDirPath)
+			DeleteCache(storage, dstDirPath)
 		}
 	default:
 		return errs.NotImplement
@@ -648,13 +652,13 @@ func PutURL(ctx context.Context, storage driver.Driver, dstDirPath, dstName, url
 			if newObj != nil {
 				addCacheObj(storage, dstDirPath, model.WrapObjName(newObj))
 			} else if !utils.IsBool(lazyCache...) {
-				ClearCache(storage, dstDirPath)
+				DeleteCache(storage, dstDirPath)
 			}
 		}
 	case driver.PutURL:
 		err = s.PutURL(ctx, dstDir, dstName, url)
 		if err == nil && !utils.IsBool(lazyCache...) {
-			ClearCache(storage, dstDirPath)
+			DeleteCache(storage, dstDirPath)
 		}
 	default:
 		return errs.NotImplement

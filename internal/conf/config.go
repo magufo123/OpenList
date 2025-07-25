@@ -38,12 +38,24 @@ type Scheme struct {
 }
 
 type LogConfig struct {
-	Enable     bool   `json:"enable" env:"LOG_ENABLE"`
-	Name       string `json:"name" env:"LOG_NAME"`
-	MaxSize    int    `json:"max_size" env:"MAX_SIZE"`
-	MaxBackups int    `json:"max_backups" env:"MAX_BACKUPS"`
-	MaxAge     int    `json:"max_age" env:"MAX_AGE"`
-	Compress   bool   `json:"compress" env:"COMPRESS"`
+	Enable     bool            `json:"enable" env:"ENABLE"`
+	Name       string          `json:"name" env:"NAME"`
+	MaxSize    int             `json:"max_size" env:"MAX_SIZE"`
+	MaxBackups int             `json:"max_backups" env:"MAX_BACKUPS"`
+	MaxAge     int             `json:"max_age" env:"MAX_AGE"`
+	Compress   bool            `json:"compress" env:"COMPRESS"`
+	Filter     LogFilterConfig `json:"filter" envPrefix:"FILTER_"`
+}
+
+type LogFilterConfig struct {
+	Enable  bool     `json:"enable" env:"ENABLE"`
+	Filters []Filter `json:"filters"`
+}
+
+type Filter struct {
+	CIDR   string `json:"cidr"`
+	Path   string `json:"path"`
+	Method string `json:"method"`
 }
 
 type TaskConfig struct {
@@ -57,6 +69,7 @@ type TasksConfig struct {
 	Transfer           TaskConfig `json:"transfer" envPrefix:"TRANSFER_"`
 	Upload             TaskConfig `json:"upload" envPrefix:"UPLOAD_"`
 	Copy               TaskConfig `json:"copy" envPrefix:"COPY_"`
+	Move               TaskConfig `json:"move" envPrefix:"MOVE_"`
 	Decompress         TaskConfig `json:"decompress" envPrefix:"DECOMPRESS_"`
 	DecompressUpload   TaskConfig `json:"decompress_upload" envPrefix:"DECOMPRESS_UPLOAD_"`
 	AllowRetryCanceled bool       `json:"allow_retry_canceled" env:"ALLOW_RETRY_CANCELED"`
@@ -104,7 +117,7 @@ type Config struct {
 	TempDir               string      `json:"temp_dir" env:"TEMP_DIR"`
 	BleveDir              string      `json:"bleve_dir" env:"BLEVE_DIR"`
 	DistDir               string      `json:"dist_dir"`
-	Log                   LogConfig   `json:"log"`
+	Log                   LogConfig   `json:"log" envPrefix:"LOG_"`
 	DelayedStart          int         `json:"delayed_start" env:"DELAYED_START"`
 	MaxConnections        int         `json:"max_connections" env:"MAX_CONNECTIONS"`
 	MaxConcurrency        int         `json:"max_concurrency" env:"MAX_CONCURRENCY"`
@@ -151,6 +164,14 @@ func DefaultConfig(dataDir string) *Config {
 			MaxSize:    50,
 			MaxBackups: 30,
 			MaxAge:     28,
+			Filter: LogFilterConfig{
+				Enable: false,
+				Filters: []Filter{
+					{Path: "/ping"},
+					{Method: "HEAD"},
+					{Path: "/dav/", Method: "PROPFIND"},
+				},
+			},
 		},
 		MaxConnections:        0,
 		MaxConcurrency:        64,

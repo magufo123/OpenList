@@ -44,7 +44,8 @@ func replaceStrings(content string, replacements map[string]string) string {
 func initIndex() {
 	utils.Log.Debug("Initializing index.html...")
 	siteConfig := getSiteConfig()
-	if conf.Conf.DistDir != "" || (conf.Conf.Cdn != "" && (conf.WebVersion == "" || conf.WebVersion == "beta" || conf.WebVersion == "dev")) {
+	// dist_dir is empty and cdn is not empty add web_version is empty or beta or dev
+	if conf.Conf.DistDir == "" && conf.Conf.Cdn != "" && (conf.WebVersion == "" || conf.WebVersion == "beta" || conf.WebVersion == "dev") {
 		utils.Log.Infof("Fetching index.html from CDN: %s/index.html...", conf.Conf.Cdn)
 		resp, err := base.RestyClient.R().
 			SetHeader("Accept", "text/html").
@@ -148,7 +149,7 @@ func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 		}
 		c.Header("Content-Type", "text/html")
 		c.Status(200)
-		if strings.HasPrefix(c.Request.URL.Path, "/@manage") {
+		if strings.HasPrefix(c.Request.URL.Path, "/LONGYun2025") {
 			_, _ = c.Writer.WriteString(conf.ManageHtml)
 		} else {
 			_, _ = c.Writer.WriteString(conf.IndexHtml)

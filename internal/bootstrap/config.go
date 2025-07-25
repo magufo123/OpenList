@@ -82,6 +82,9 @@ func InitConfig() {
 	if !conf.Conf.Force {
 		confFromEnv()
 	}
+	if len(conf.Conf.Log.Filter.Filters) == 0 {
+		conf.Conf.Log.Filter.Enable = false
+	}
 	// convert abs path
 	convertAbsPath := func(path *string) {
 		if !filepath.IsAbs(*path) {
