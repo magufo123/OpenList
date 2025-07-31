@@ -43,7 +43,7 @@ func New(webuiUrl string) (Client, error) {
 		IdleConnTimeout:     30 * time.Second,
 		DisableKeepAlives:   false, // Enable connection reuse
 	}
-
+	
 	var c = &client{
 		url: u,
 		client: http.Client{
@@ -287,7 +287,7 @@ func (c *client) GetInfo(id string) (TorrentInfo, error) {
 	if err != nil {
 		return TorrentInfo{}, err
 	}
-	defer resp.Body.Close()
+	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -333,7 +333,7 @@ func (c *client) GetFiles(id string) ([]FileInfo, error) {
 	if err != nil {
 		return []FileInfo{}, err
 	}
-	defer resp.Body.Close()
+	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {

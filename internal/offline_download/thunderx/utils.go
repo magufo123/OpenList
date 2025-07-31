@@ -2,141 +2,41 @@ package thunderx
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"github.com/OpenListTeam/OpenList/v4/drivers/thunderx"
-	"github.com/OpenListTeam/OpenList/v4/internal/conf"
-	"github.com/OpenListTeam/OpenList/v4/internal/errs"
-	"github.com/OpenListTeam/OpenList/v4/internal/model"
-	"github.com/OpenListTeam/OpenList/v4/internal/offline_download/tool"
 	"github.com/OpenListTeam/OpenList/v4/internal/op"
-	"github.com/OpenListTeam/OpenList/v4/internal/setting"
-	"strconv"
+	"github.com/OpenListTeam/OpenList/v4/pkg/singleflight"
+	"github.com/OpenListTeam/go-cache"
+	"time"
 )
 
-type ThunderX struct {
-	refreshTaskCache bool
-}
+var taskCache = cache.NewMemCache(cache.WithShards[[]thunderx.OfflineTask](16))
+var taskG singleflight.Group[[]thunderx.OfflineTask]
 
-func (t *ThunderX) Name() string {
-	return "ThunderX"
-}
-
-func (t *ThunderX) Items() []model.SettingItem {
-	return nil
-}
-
-func (t *ThunderX) Init() (string, error) {
-	t.refreshTaskCache = false
-	return "ok", nil
-}
-
-func (t *ThunderX) IsReady() bool {
-	tempDir := setting.GetStr(conf.ThunderXTempDir)
-	if tempDir == "" {
-		return false
-	}
-	storage, _, err := op.GetStorageAndActualPath(tempDir)
-	if err != nil {
-		return false
-	}
-	if _, ok := storage.(*thunderx.ThunderX); !ok {
-		return false
-	}
-	return true
-}
-
-func (t *ThunderX) AddURL(args *tool.AddUrlArgs) (string, error) {
-	// 添加新任务刷新缓存
-	t.refreshTaskCache = true
-	storage, actualPath, err := op.GetStorageAndActualPath(args.TempDir)
-	if err != nil {
-		return "", err
-	}
-	thunderXDriver, ok := storage.(*thunderx.ThunderX)
-	if !ok {
-		return "", fmt.Errorf("unsupported storage driver for offline download, only ThunderX is supported")
-	}
-
-	ctx := context.Background()
-
-	if err := op.MakeDir(ctx, storage, actualPath); err != nil {
-		return "", err
-	}
-
-	parentDir, err := op.GetUnwrap(ctx, storage, actualPath)
-	if err != nil {
-		return "", err
-	}
-
-	task, err := thunderXDriver.OfflineDownload(ctx, args.Url, parentDir, "")
-	if err != nil {
-		return "", fmt.Errorf("failed to add offline download task: %w", err)
-	}
-
-	return task.ID, nil
-}
-
-func (t *ThunderX) Remove(task *tool.DownloadTask) error {
-	storage, _, err := op.GetStorageAndActualPath(task.TempDir)
-	if err != nil {
-		return err
-	}
-	thunderXDriver, ok := storage.(*thunderx.ThunderX)
-	if !ok {
-		return fmt.Errorf("unsupported storage driver for offline download, only ThunderX is supported")
-	}
-	ctx := context.Background()
-	err = thunderXDriver.DeleteOfflineTasks(ctx, []string{task.GID}, false)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (t *ThunderX) Status(task *tool.DownloadTask) (*tool.Status, error) {
-	storage, _, err := op.GetStorageAndActualPath(task.TempDir)
-	if err != nil {
-		return nil, err
-	}
-	thunderXDriver, ok := storage.(*thunderx.ThunderX)
-	if !ok {
-		return nil, fmt.Errorf("unsupported storage driver for offline download, only ThunderX is supported")
-	}
-	tasks, err := t.GetTasks(thunderXDriver)
-	if err != nil {
-		return nil, err
-	}
-	s := &tool.Status{
-		Progress:  0,
-		NewGID:    "",
-		Completed: false,
-		Status:    "the task has been deleted",
-		Err:       nil,
-	}
-	for _, t := range tasks {
-		if t.ID == task.GID {
-			s.Progress = float64(t.Progress)
-			s.Status = t.Message
-			s.Completed = t.Phase == "PHASE_TYPE_COMPLETE"
-			s.TotalBytes, err = strconv.ParseInt(t.FileSize, 10, 64)
-			if err != nil {
-				s.TotalBytes = 0
-			}
-			if t.Phase == "PHASE_TYPE_ERROR" {
-				s.Err = errors.New(t.Message)
-			}
-			return s, nil
+func (t *ThunderX) GetTasks(thunderxDriver *thunderx.ThunderX) ([]thunderx.OfflineTask, error) {
+	key := op.Key(thunderxDriver, "/drive/v1/task")
+	if !t.refreshTaskCache {
+		if tasks, ok := taskCache.Get(key); ok {
+			return tasks, nil
 		}
 	}
-	s.Err = fmt.Errorf("the task has been deleted")
-	return s, nil
-}
-
-func (t *ThunderX) Run(task *tool.DownloadTask) error {
-	return errs.NotSupport
-}
-
-func init() {
-	tool.Tools.Add(&ThunderX{})
+	t.refreshTaskCache = false
+	tasks, err, _ := taskG.Do(key, func() ([]thunderx.OfflineTask, error) {
+		ctx := context.Background()
+		phase := []string{"PHASE_TYPE_RUNNING", "PHASE_TYPE_ERROR", "PHASE_TYPE_PENDING", "PHASE_TYPE_COMPLETE"}
+		tasks, err := thunderxDriver.OfflineList(ctx, "", phase)
+		if err != nil {
+			return nil, err
+		}
+		// 添加缓存 10s
+		if len(tasks) > 0 {
+			taskCache.Set(key, tasks, cache.WithEx[[]thunderx.OfflineTask](time.Second*10))
+		} else {
+			taskCache.Del(key)
+		}
+		return tasks, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return tasks, nil
 }
