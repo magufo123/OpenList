@@ -72,6 +72,9 @@ const (
 	// thunder
 	ThunderTempDir = "thunder_temp_dir"
 
+	// thunderx
+	ThunderXTempDir = "thunderx_temp_dir"
+
 	// thunder_browser
 	ThunderBrowserTempDir = "thunder_browser_temp_dir"
 

@@ -49,10 +49,10 @@ jobs:
           out-dir: build
           x-flags: |
             github.com/OpenListTeam/OpenList/internal/v4/conf.BuiltAt=$built_at
-            github.com/OpenListTeam/OpenList/internal/v4/conf.GitAuthor=OpenList
+            github.com/OpenListTeam/OpenList/internal/v4/conf.GitAuthor=The OpenList Projects Contributors <long2005a2@outlook.com>
             github.com/OpenListTeam/OpenList/internal/v4/conf.GitCommit=$git_commit
             github.com/OpenListTeam/OpenList/internal/v4/conf.Version=$tag
-            github.com/OpenListTeam/OpenList/internal/v4/conf.WebVersion=dev
+            github.com/OpenListTeam/OpenList/internal/v4/conf.WebVersion=rolling
           output: openlist$ext
 
       - name: Upload artifact
