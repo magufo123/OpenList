@@ -10,6 +10,7 @@ type Addition struct {
 	SiteUrl         string `json:"siteUrl" type:"text" required:"false" help:"The prefix URL of the strm file"`
 	FilterFileTypes string `json:"filterFileTypes" type:"text" default:"strm" required:"false" help:"Supports suffix name of strm file"`
 	EncodePath      bool   `json:"encodePath" default:"true" required:"true" help:"encode the path in the strm file"`
+	LocalModel      bool   `json:"localModel" default:"false" help:"enable local mode"`
 }
 
 var config = driver.Config{

@@ -20,9 +20,9 @@ type Database struct {
 }
 
 type Meilisearch struct {
-	Host        string `json:"host" env:"HOST"`
-	APIKey      string `json:"api_key" env:"API_KEY"`
-	IndexPrefix string `json:"index_prefix" env:"INDEX_PREFIX"`
+	Host   string `json:"host" env:"HOST"`
+	APIKey string `json:"api_key" env:"API_KEY"`
+	Index  string `json:"index" env:"INDEX"`
 }
 
 type Scheme struct {
@@ -155,7 +155,8 @@ func DefaultConfig(dataDir string) *Config {
 			DBFile:      dbPath,
 		},
 		Meilisearch: Meilisearch{
-			Host: "http://localhost:7700",
+			Host:  "http://localhost:7700",
+			Index: "openlist",
 		},
 		BleveDir: indexDir,
 		Log: LogConfig{

@@ -2,7 +2,6 @@ package data
 
 import (
 	"fmt"
-	"time"
 	"os"
 
 	"github.com/OpenListTeam/OpenList/v4/cmd/flags"
@@ -40,18 +39,19 @@ func initUser() {
 			if err := op.CreateUser(admin); err != nil {
 				panic(err)
 			} else {
-				utils.Log.Infof("Successfully created the admin user and the initial password is: %s", adminPassword)
-				fmt.Printf("\033[36mINFO\033[39m[%s] Successfully created the admin user and the initial password is: %s\n", time.Now().Format("2006-01-02 15:04:05"), adminPassword)
+				// DO NOT output the password to log file. Only output to console.
+				// utils.Log.Infof("Successfully created the admin user and the initial password is: %s", adminPassword)
+				fmt.Printf("Successfully created the admin user and the initial password is: %s", adminPassword)
 			}
 		} else {
 			utils.Log.Fatalf("[init user] Failed to get admin user: %v", err)
 		}
 	}
-	guest, err := op.GetGuest()
+	_, err = op.GetGuest()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			salt := random.String(16)
-			guest = &model.User{
+			guest := &model.User{
 				Username:   "guest",
 				PwdHash:    model.TwoHashPwd("guest", salt),
 				Salt:       salt,
