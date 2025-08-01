@@ -38,8 +38,8 @@ var AdminCmd = &cobra.Command{
 var RandomPasswordCmd = &cobra.Command{
 	Use:   "random",
 	Short: "Reset admin user's password to a random string",
-	utils.Log.Infof("reset admin user's password to a random string from CLI")
 	Run: func(cmd *cobra.Command, args []string) {
+		utils.Log.Infof("reset admin user's password to a random string from CLI")
 		newPwd := random.String(8)
 		setAdminPassword(newPwd)
 	},
