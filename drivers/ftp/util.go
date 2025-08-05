@@ -15,8 +15,8 @@ import (
 // do others that not defined in Driver interface
 
 func (d *FTP) login() error {
-	err, _, _ := singleflight.ErrorGroup.Do(fmt.Sprintf("FTP.login:%p", d), func() (error, error) {
-		return d._login(), nil
+	_, err, _ := singleflight.AnyGroup.Do(fmt.Sprintf("FTP.login:%p", d), func() (any, error) {
+		return nil, d._login()
 	})
 	return err
 }

@@ -9,6 +9,7 @@ import (
 	sdk "github.com/OpenListTeam/115-sdk-go"
 	"github.com/OpenListTeam/OpenList/v4/internal/driver"
 	"github.com/OpenListTeam/OpenList/v4/internal/model"
+	streamPkg "github.com/OpenListTeam/OpenList/v4/internal/stream"
 	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/avast/retry-go"
@@ -69,9 +70,6 @@ func (d *Open115) singleUpload(ctx context.Context, tempF model.File, tokenResp 
 // }
 
 func (d *Open115) multpartUpload(ctx context.Context, stream model.FileStreamer, up driver.UpdateProgress, tokenResp *sdk.UploadGetTokenResp, initResp *sdk.UploadInitResp) error {
-	fileSize := stream.GetSize()
-	chunkSize := calPartSize(fileSize)
-
 	ossClient, err := oss.New(tokenResp.Endpoint, tokenResp.AccessKeyId, tokenResp.AccessKeySecret, oss.SecurityToken(tokenResp.SecurityToken))
 	if err != nil {
 		return err
@@ -86,9 +84,15 @@ func (d *Open115) multpartUpload(ctx context.Context, stream model.FileStreamer,
 		return err
 	}
 
+	fileSize := stream.GetSize()
+	chunkSize := calPartSize(fileSize)
 	partNum := (stream.GetSize() + chunkSize - 1) / chunkSize
 	parts := make([]oss.UploadPart, partNum)
 	offset := int64(0)
+	ss, err := streamPkg.NewStreamSectionReader(stream, int(chunkSize))
+	if err != nil {
+		return err
+	}
 	for i := int64(1); i <= partNum; i++ {
 		if utils.IsCanceled(ctx) {
 			return ctx.Err()
@@ -98,10 +102,13 @@ func (d *Open115) multpartUpload(ctx context.Context, stream model.FileStreamer,
 		if i == partNum {
 			partSize = fileSize - (i-1)*chunkSize
 		}
-		rd := utils.NewMultiReadable(io.LimitReader(stream, partSize))
+		rd, err := ss.GetSectionReader(offset, partSize)
+		if err != nil {
+			return err
+		}
+		rateLimitedRd := driver.NewLimitedUploadStream(ctx, rd)
 		err = retry.Do(func() error {
-			_ = rd.Reset()
-			rateLimitedRd := driver.NewLimitedUploadStream(ctx, rd)
+			rd.Seek(0, io.SeekStart)
 			part, err := bucket.UploadPart(imur, rateLimitedRd, partSize, int(i))
 			if err != nil {
 				return err
@@ -112,6 +119,7 @@ func (d *Open115) multpartUpload(ctx context.Context, stream model.FileStreamer,
 			retry.Attempts(3),
 			retry.DelayType(retry.BackOffDelay),
 			retry.Delay(time.Second))
+		ss.RecycleSectionReader(rd)
 		if err != nil {
 			return err
 		}
