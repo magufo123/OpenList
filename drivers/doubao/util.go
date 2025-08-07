@@ -460,9 +460,9 @@ func (d *Doubao) Upload(ctx context.Context, config *UploadConfig, dstDir model.
 
 	// 计算CRC32
 	crc32Hash := crc32.NewIEEE()
-	w, _ := utils.CopyWithBuffer(crc32Hash, reader)
+	w, err := utils.CopyWithBuffer(crc32Hash, reader)
 	if w != file.GetSize() {
-		return nil, fmt.Errorf("can't read data, expected=%d, got=%d", file.GetSize(), w)
+		return nil, fmt.Errorf("failed to read all data: (expect =%d, actual =%d) %w", file.GetSize(), w, err)
 	}
 	crc32Value := hex.EncodeToString(crc32Hash.Sum(nil))
 
@@ -588,9 +588,9 @@ func (d *Doubao) UploadByMultipart(ctx context.Context, config *UploadConfig, fi
 						return err
 					}
 					hash.Reset()
-					w, _ := utils.CopyWithBuffer(hash, reader)
+					w, err := utils.CopyWithBuffer(hash, reader)
 					if w != size {
-						return fmt.Errorf("can't read data, expected=%d, got=%d", size, w)
+						return fmt.Errorf("failed to read all data: (expect =%d, actual =%d) %w", size, w, err)
 					}
 					crc32Value = hex.EncodeToString(hash.Sum(nil))
 					rateLimitedRd = driver.NewLimitedUploadStream(ctx, reader)

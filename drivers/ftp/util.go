@@ -1,14 +1,15 @@
 package ftp
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/OpenListTeam/OpenList/v4/pkg/singleflight"
+	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
 	"github.com/jlaffaye/ftp"
 )
 
@@ -16,111 +17,56 @@ import (
 
 func (d *FTP) login() error {
 	_, err, _ := singleflight.AnyGroup.Do(fmt.Sprintf("FTP.login:%p", d), func() (any, error) {
-		return nil, d._login()
+		var err error
+		if d.conn != nil {
+			err = d.conn.NoOp()
+			if err != nil {
+				d.conn.Quit()
+				d.conn = nil
+			}
+		}
+		if d.conn == nil {
+			d.conn, err = d._login(d.ctx)
+		}
+		return nil, err
 	})
 	return err
 }
 
-func (d *FTP) _login() error {
-
-	if d.conn != nil {
-		_, err := d.conn.CurrentDir()
-		if err == nil {
-			return nil
-		}
-	}
-	conn, err := ftp.Dial(d.Address, ftp.DialWithShutTimeout(10*time.Second))
+func (d *FTP) _login(ctx context.Context) (*ftp.ServerConn, error) {
+	conn, err := ftp.Dial(d.Address, ftp.DialWithShutTimeout(10*time.Second), ftp.DialWithContext(ctx))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = conn.Login(d.Username, d.Password)
 	if err != nil {
-		return err
+		conn.Quit()
+		return nil, err
 	}
-	d.conn = conn
-	return nil
+	return conn, nil
 }
 
-// FileReader An FTP file reader that implements io.MFile for seeking.
 type FileReader struct {
-	conn         *ftp.ServerConn
-	resp         *ftp.Response
-	offset       atomic.Int64
-	readAtOffset int64
-	mu           sync.Mutex
-	path         string
-	size         int64
+	*ftp.Response
+	io.Reader
+	ctx context.Context
 }
 
-func NewFileReader(conn *ftp.ServerConn, path string, size int64) *FileReader {
-	return &FileReader{
-		conn: conn,
-		path: path,
-		size: size,
-	}
-}
-
-func (r *FileReader) Read(buf []byte) (n int, err error) {
-	n, err = r.ReadAt(buf, r.offset.Load())
-	r.offset.Add(int64(n))
-	return
-}
-
-func (r *FileReader) ReadAt(buf []byte, off int64) (n int, err error) {
-	if off < 0 {
-		return -1, os.ErrInvalid
-	}
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	if off != r.readAtOffset {
-		//have to restart the connection, to correct offset
-		_ = r.resp.Close()
-		r.resp = nil
-	}
-
-	if r.resp == nil {
-		r.resp, err = r.conn.RetrFrom(r.path, uint64(off))
-		r.readAtOffset = off
-		if err != nil {
-			return 0, err
+func (r *FileReader) Read(buf []byte) (int, error) {
+	n := 0
+	for n < len(buf) {
+		w, err := r.Reader.Read(buf[n:])
+		if utils.IsCanceled(r.ctx) {
+			return n, r.ctx.Err()
+		}
+		n += w
+		if errors.Is(err, os.ErrDeadlineExceeded) {
+			r.Response.SetDeadline(time.Now().Add(time.Second))
+			continue
+		}
+		if err != nil || w == 0 {
+			return n, err
 		}
 	}
-
-	n, err = r.resp.Read(buf)
-	r.readAtOffset += int64(n)
-	return
-}
-
-func (r *FileReader) Seek(offset int64, whence int) (int64, error) {
-	oldOffset := r.offset.Load()
-	var newOffset int64
-	switch whence {
-	case io.SeekStart:
-		newOffset = offset
-	case io.SeekCurrent:
-		newOffset = oldOffset + offset
-	case io.SeekEnd:
-		return r.size, nil
-	default:
-		return -1, os.ErrInvalid
-	}
-
-	if newOffset < 0 {
-		// offset out of range
-		return oldOffset, os.ErrInvalid
-	}
-	if newOffset == oldOffset {
-		// offset not changed, so return directly
-		return oldOffset, nil
-	}
-	r.offset.Store(newOffset)
-	return newOffset, nil
-}
-
-func (r *FileReader) Close() error {
-	if r.resp != nil {
-		return r.resp.Close()
-	}
-	return nil
+	return n, nil
 }

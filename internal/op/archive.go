@@ -372,10 +372,15 @@ func DriverExtract(ctx context.Context, storage driver.Driver, path string, args
 	}
 
 	var forget any
+	var linkM *extractLink
 	fn := func() (*extractLink, error) {
 		link, err := driverExtract(ctx, storage, path, args)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed extract archive")
+		}
+		if link.MFile != nil && forget != nil {
+			linkM = link
+			return nil, errLinkMFileCache
 		}
 		if link.Link.Expiration != nil {
 			extractCache.Set(key, link, cache.WithEx[*extractLink](*link.Link.Expiration))
@@ -406,11 +411,18 @@ func DriverExtract(ctx context.Context, storage driver.Driver, path string, args
 			link.AcquireReference()
 		}
 	}
+	if err == errLinkMFileCache {
+		if linkM != nil {
+			return linkM.Link, linkM.Obj, nil
+		}
+		forget = nil
+		link, err = fn()
+	}
 
 	if err != nil {
 		return nil, nil, err
 	}
-	return link.Link, link.Obj, err
+	return link.Link, link.Obj, nil
 }
 
 func driverExtract(ctx context.Context, storage driver.Driver, path string, args model.ArchiveInnerArgs) (*extractLink, error) {

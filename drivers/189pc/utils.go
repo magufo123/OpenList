@@ -550,9 +550,9 @@ func (y *Cloud189PC) StreamUpload(ctx context.Context, dstDir model.Obj, file mo
 						return err
 					}
 					silceMd5.Reset()
-					w, _ := utils.CopyWithBuffer(writers, reader)
+					w, err := utils.CopyWithBuffer(writers, reader)
 					if w != size {
-						return fmt.Errorf("can't read data, expected=%d, got=%d", size, w)
+						return fmt.Errorf("failed to read all data: (expect =%d, actual =%d) %w", size, w, err)
 					}
 					// 计算块md5并进行hex和base64编码
 					md5Bytes := silceMd5.Sum(nil)

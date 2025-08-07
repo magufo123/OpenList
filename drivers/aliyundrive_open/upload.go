@@ -137,11 +137,8 @@ func (d *AliyundriveOpen) calProofCode(stream model.FileStreamer) (string, error
 	}
 	buf := make([]byte, length)
 	n, err := io.ReadFull(reader, buf)
-	if err == io.ErrUnexpectedEOF {
-		return "", fmt.Errorf("can't read data, expected=%d, got=%d", len(buf), n)
-	}
-	if err != nil {
-		return "", err
+	if n != int(length) {
+		return "", fmt.Errorf("failed to read all data: (expect =%d, actual =%d) %w", length, n, err)
 	}
 	return base64.StdEncoding.EncodeToString(buf), nil
 }
