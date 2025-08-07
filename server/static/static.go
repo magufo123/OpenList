@@ -151,7 +151,7 @@ func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 		}
 		c.Header("Content-Type", "text/html")
 		c.Status(200)
-		if strings.HasPrefix(c.Request.URL.Path, "/LONGYun2025") {
+		if strings.HasPrefix(c.Request.URL.Path, "/@manage") {
 			_, _ = c.Writer.WriteString(conf.ManageHtml)
 		} else {
 			_, _ = c.Writer.WriteString(conf.IndexHtml)

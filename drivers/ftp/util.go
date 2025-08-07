@@ -2,14 +2,10 @@ package ftp
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io"
-	"os"
 	"time"
 
 	"github.com/OpenListTeam/OpenList/v4/pkg/singleflight"
-	"github.com/OpenListTeam/OpenList/v4/pkg/utils"
 	"github.com/jlaffaye/ftp"
 )
 
@@ -44,29 +40,4 @@ func (d *FTP) _login(ctx context.Context) (*ftp.ServerConn, error) {
 		return nil, err
 	}
 	return conn, nil
-}
-
-type FileReader struct {
-	*ftp.Response
-	io.Reader
-	ctx context.Context
-}
-
-func (r *FileReader) Read(buf []byte) (int, error) {
-	n := 0
-	for n < len(buf) {
-		w, err := r.Reader.Read(buf[n:])
-		if utils.IsCanceled(r.ctx) {
-			return n, r.ctx.Err()
-		}
-		n += w
-		if errors.Is(err, os.ErrDeadlineExceeded) {
-			r.Response.SetDeadline(time.Now().Add(time.Second))
-			continue
-		}
-		if err != nil || w == 0 {
-			return n, err
-		}
-	}
-	return n, nil
 }

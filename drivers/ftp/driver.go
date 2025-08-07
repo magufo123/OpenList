@@ -2,10 +2,9 @@ package ftp
 
 import (
 	"context"
+	"errors"
 	"io"
 	stdpath "path"
-	"sync"
-	"time"
 
 	"github.com/OpenListTeam/OpenList/v4/internal/driver"
 	"github.com/OpenListTeam/OpenList/v4/internal/errs"
@@ -72,45 +71,44 @@ func (d *FTP) List(ctx context.Context, dir model.Obj, args model.ListArgs) ([]m
 	return res, nil
 }
 
-func (d *FTP) Link(_ context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
-	ctx, cancel := context.WithCancel(context.Background())
+func (d *FTP) Link(ctx context.Context, file model.Obj, args model.LinkArgs) (*model.Link, error) {
 	conn, err := d._login(ctx)
 	if err != nil {
-		cancel()
 		return nil, err
-	}
-	close := func() error {
-		_ = conn.Quit()
-		cancel()
-		return nil
 	}
 
 	path := encode(file.GetPath(), d.Encoding)
 	size := file.GetSize()
-	mu := &sync.Mutex{}
 	resultRangeReader := func(context context.Context, httpRange http_range.Range) (io.ReadCloser, error) {
 		length := httpRange.Length
 		if length < 0 || httpRange.Start+length > size {
 			length = size - httpRange.Start
 		}
-		mu.Lock()
-		defer mu.Unlock()
-		r, err := conn.RetrFrom(path, uint64(httpRange.Start))
-		if err != nil {
-			_ = conn.Quit()
-			conn, err = d._login(ctx)
-			if err == nil {
-				r, err = conn.RetrFrom(path, uint64(httpRange.Start))
-			}
+		var c *ftp.ServerConn
+		if ctx == context {
+			c = conn
+		} else {
+			var err error
+			c, err = d._login(context)
 			if err != nil {
 				return nil, err
 			}
 		}
-		r.SetDeadline(time.Now().Add(time.Second))
-		return &FileReader{
-			Response: r,
-			Reader:   io.LimitReader(r, length),
-			ctx:      context,
+		resp, err := c.RetrFrom(path, uint64(httpRange.Start))
+		if err != nil {
+			return nil, err
+		}
+		var close utils.CloseFunc
+		if context == ctx {
+			close = resp.Close
+		} else {
+			close = func() error {
+				return errors.Join(resp.Close(), c.Quit())
+			}
+		}
+		return utils.ReadCloser{
+			Reader: io.LimitReader(resp, length),
+			Closer: close,
 		}, nil
 	}
 
@@ -118,7 +116,7 @@ func (d *FTP) Link(_ context.Context, file model.Obj, args model.LinkArgs) (*mod
 		RangeReader: &model.FileRangeReader{
 			RangeReaderIF: stream.RateLimitRangeReaderFunc(resultRangeReader),
 		},
-		SyncClosers: utils.NewSyncClosers(utils.CloseFunc(close)),
+		SyncClosers: utils.NewSyncClosers(utils.CloseFunc(conn.Quit)),
 	}, nil
 }
 
