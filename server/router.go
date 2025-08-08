@@ -32,6 +32,7 @@ func Init(e *gin.Engine) {
 	g.GET("/favicon.ico", handles.Favicon)
 	g.GET("/robots.txt", handles.Robots)
 	g.GET("/i/:link_name", handles.Plist)
+	g.GET("/manifest.json", static.ManifestJSON)
 	common.SecretKey = []byte(conf.Conf.JwtSecret)
 	g.Use(middlewares.StoragesLoaded)
 	if conf.Conf.MaxConnections > 0 {
