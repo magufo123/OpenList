@@ -107,8 +107,8 @@ func InitialSettings() []model.SettingItem {
 		{Key: conf.AllowMounted, Value: "true", Type: conf.TypeBool, Group: model.SITE},
 		{Key: conf.RobotsTxt, Value: "User-agent: *\nAllow: /", Type: conf.TypeText, Group: model.SITE},
 		// style settings
-		{Key: conf.Logo, Value: "https://live2d.long2024.cn/yunp/applogo.png", Type: conf.TypeText, Group: model.STYLE},
-		{Key: conf.Favicon, Value: "https://live2d.long2024.cn/yunp/favicon.ico", Type: conf.TypeString, Group: model.STYLE},
+		{Key: conf.Logo, Value: "https://live2d.long2024.cn/yunp/applogo.png", MigrationValue: "https://tu.long2024.cn/images/2025/08/13/applogo.png", Type: conf.TypeText, Group: model.STYLE},
+		{Key: conf.Favicon, Value: "https://live2d.long2024.cn/yunp/favicon.ico", MigrationValue: "https://tu.long2024.cn/images/2025/08/13/favicon.ico", Type: conf.TypeString, Group: model.STYLE},
 		{Key: conf.MainColor, Value: "#1890ff", Type: conf.TypeString, Group: model.STYLE},
 		{Key: "home_icon", Value: "🏠", Type: conf.TypeString, Group: model.STYLE},
 		{Key: "home_container", Value: "max_980px", Type: conf.TypeSelect, Options: "max_980px,hope_container", Group: model.STYLE},
@@ -141,7 +141,7 @@ func InitialSettings() []model.SettingItem {
 		//		{Key: conf.PdfViewers, Value: `{
 		//	"pdf.js":"https://openlistteam.github.io/pdf.js/web/viewer.html?file=$url"
 		//}`, Type: conf.TypeText, Group: model.PREVIEW},
-		{Key: "audio_cover", Value: "https://live2d.long2024.cn/yunp/audio.png", Type: conf.TypeString, Group: model.PREVIEW},
+		{Key: "audio_cover", Value: "https://live2d.long2024.cn/yunp/audio.png", MigrationValue: "https://tu.long2024.cn/images/2025/08/13/audio.png", Type: conf.TypeString, Group: model.PREVIEW},
 		{Key: conf.AudioAutoplay, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
 		{Key: conf.VideoAutoplay, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},
 		{Key: conf.PreviewArchivesByDefault, Value: "true", Type: conf.TypeBool, Group: model.PREVIEW},

@@ -185,5 +185,5 @@ func (u *User) WebAuthnCredentials() []webauthn.Credential {
 }
 
 func (u *User) WebAuthnIcon() string {
-	return "https://live2d.long2024.cn/yunp/applogo.png"
+	return "https://live2d.long2024.cn/yunp/applogo.png" 
 }

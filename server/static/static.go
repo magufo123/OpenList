@@ -117,9 +117,9 @@ func UpdateIndex() {
 	utils.Log.Debug("Applying replacements for default pages...")
 	replaceMap1 := map[string]string{
 		"https://live2d.long2024.cn/yunp/applogo.png": favicon,
-		"https://long2024.cn/favicon.ico": logo,
-		"Loading...":            title,
-		"main_color: undefined": fmt.Sprintf("main_color: '%s'", mainColor),
+		"https://live2d.long2024.cn/yunp/favicon.ico": logo,
+		"Loading...":            					   title,
+		"main_color: undefined": 					   fmt.Sprintf("main_color: '%s'", mainColor),
 	}
 	conf.ManageHtml = replaceStrings(conf.RawIndexHtml, replaceMap1)
 	utils.Log.Debug("Applying replacements for manage pages...")
