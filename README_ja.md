@@ -2,13 +2,13 @@
   <img width="100px" alt="logo" src="https://long2024.cn/image/logo-Y.png"/></a>
   <p><em>🗂複数のストレージをサポートするファイルリストプログラムで、Gin と SolidJS を使用し、AList プロジェクトをフォークして開発されました。</em></p>
 <div>
-  <a href="https://github.com/lyy2005a3/OpenList/actions?query=workflow%3ABuild">
-    <img src="https://img.shields.io/github/actions/workflow/status/lyy2005a3/OpenList/build.yml?branch=main" alt="Build status" />
+  <a href="https://github.com/lyy2005a2/OpenList/actions?query=workflow%3ABuild">
+    <img src="https://img.shields.io/github/actions/workflow/status/lyy2005a2/OpenList/build.yml?branch=main" alt="Build status" />
   </a>
-  <a href="https://github.com/lyy2005a3/OpenList/releases">
-    <img src="https://img.shields.io/github/release/lyy2005a3/OpenList" alt="latest version" />
+  <a href="https://github.com/lyy2005a2/OpenList/releases">
+    <img src="https://img.shields.io/github/release/lyy2005a2/OpenList" alt="latest version" />
   </a>
-  <a href="https://github.com/lyy2005a3/OpenList/releases">
+  <a href="https://github.com/lyy2005a2/OpenList/releases">
     <img src="https://img.shields.io/github/downloads/lyy2005a3/OpenList/total?color=%239F7AEA&logo=github" alt="Downloads" />
   </a>
 </div>
@@ -87,11 +87,13 @@ OpenListプロジェクトへのご支援とご理解をありがとうござい
 
 - ⑦ 更新日時: 2025年7月05日 夜21時25分 バージョン: v4.0.8
 
-- 更新日時：2025年7月25日 午後16時30分 バージョン：v4.0.9
+- ⑧ 更新日時：2025年7月25日 午後16時30分 バージョン：v4.0.9
 
-- ⑨更新日時：2025年8月1日 午後1時20分 バージョン：v4.1.0
+- ⑨ 更新日時：2025年8月1日 午後1時20分 バージョン：v4.1.0
 
-- ⑨更新日時：2025年8月18日 午後21時45分 バージョン：v4.1.1
+- ⑩ 更新日時：2025年8月18日 午後21時45分 バージョン：v4.1.1
+
+- ⑪ 更新日時：2025年9月08日 午後23:20 バージョン：v4.1.2
 
 
 ## 免責事項

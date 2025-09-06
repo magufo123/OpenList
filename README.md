@@ -2,13 +2,13 @@
   <img width="80px" alt="logo" src="https://long2024.cn/image/logo-Y.png"/></a>
   <p><em>现在从Alist改名为OpenList，属于"li-peifeng"的魔改版OpenList。</em></p>
 <div>
-  <a href="https://github.com/lyy2005a3/OpenList/actions?query=workflow%3ABuild">
-    <img src="https://img.shields.io/github/actions/workflow/status/lyy2005a3/OpenList/build.yml?branch=main" alt="Build status" />
+  <a href="https://github.com/lyy2005a2/OpenList/actions?query=workflow%3ABuild">
+    <img src="https://img.shields.io/github/actions/workflow/status/lyy2005a2/OpenList/build.yml?branch=main" alt="Build status" />
   </a>
-  <a href="https://github.com/lyy2005a3/OpenList/releases">
-    <img src="https://img.shields.io/github/release/lyy2005a3/OpenList" alt="latest version" />
+  <a href="https://github.com/lyy2005a2/OpenList/releases">
+    <img src="https://img.shields.io/github/release/lyy2005a2/OpenList" alt="latest version" />
   </a>
-  <a href="https://github.com/lyy2005a3/OpenList/releases">
+  <a href="https://github.com/lyy2005a2/OpenList/releases">
     <img src="https://img.shields.io/github/downloads/lyy2005a3/OpenList/total?color=%239F7AEA&logo=github" alt="Downloads" />
   </a>
 </div>
@@ -91,7 +91,9 @@ OpenList 是一个由 OpenList 团队独立维护的开源项目，遵循 AGPL-3
 
 - ⑨更新时间：2025年8月01日 下午13.20  版本为：v4.1.0 
 
-- ⑨更新时间：2025年8月18日 下午21.45  版本为：v4.1.1
+- ⑩更新时间：2025年8月18日 下午21.45  版本为：v4.1.1
+
+- ⑪更新时间：2025年9月08日 下午23:20  版本为：v4.1.2
 
 
 ## 免责声明

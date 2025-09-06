@@ -116,7 +116,7 @@ func UpdateIndex() {
 	mainColor := setting.GetStr(conf.MainColor)
 	utils.Log.Debug("Applying replacements for default pages...")
 	replaceMap1 := map[string]string{
-		"https://live2d.long2024.cn/yunp/applogo.png": favicon,
+		"https://tu.long2024.cn/images/2025/08/13/applogo.png": favicon,
 		"https://live2d.long2024.cn/yunp/favicon.ico": logo,
 		"Loading...":            					   title,
 		"main_color: undefined": 					   fmt.Sprintf("main_color: '%s'", mainColor),
