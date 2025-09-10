@@ -4,8 +4,8 @@ builtAt="$(date +'%F %T %z')"
 gitAuthor="The OpenList Projects Contributors <long2005a2@outlook.com>"
 gitCommit=$(git log --pretty=format:"%h" -1)
 
-# Set frontend repository, default to lyy2005a2/OpenList-Frontend
-frontendRepo="${FRONTEND_REPO:-lyy2005a2/OpenList-Frontend}"
+# Set frontend repository, default to magufo123/OpenList-Frontend
+frontendRepo="${FRONTEND_REPO:-magufo123/OpenList-Frontend}"
 
 githubAuthArgs=""
 if [ -n "$GITHUB_TOKEN" ]; then
